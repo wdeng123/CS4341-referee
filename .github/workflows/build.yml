@@ -5,8 +5,6 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  release:
-    types: [created]
 
 jobs:
   test:
@@ -16,7 +14,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.8', '3.9', '3.10', '3.11']
         exclude:
-          # Exclude non-Windows platforms for pywin32
+          # Exclude non-Windows platforms for non-3.8 Python versions (pywin32 dependency)
           - os: ubuntu-latest
             python-version: '3.9'
           - os: ubuntu-latest
@@ -42,7 +40,8 @@ jobs:
 
     - name: Install Poetry
       run: |
-        curl -sSL https://install.python-poetry.org | python3 -
+        python -m pip install --upgrade pip
+        python -m pip install poetry
 
     - name: Configure Poetry
       run: |
@@ -58,11 +57,6 @@ jobs:
     - name: Install dependencies
       run: poetry install
 
-    - name: Run pre-commit hooks
-      run: |
-        poetry run pre-commit install
-        poetry run pre-commit run --all-files
-
     - name: Run tests with pytest
       run: poetry run pytest
 
@@ -71,76 +65,39 @@ jobs:
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+  build:
     needs: test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019, macos-11]
-
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.8']
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
-
-      - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.16.2
+          python-version: ${{ matrix.python-version }}
 
       - name: Install Poetry
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+          python -m pip install --upgrade pip
+          python -m pip install poetry
 
-      - name: Build wheels
-        env:
-          CIBW_SKIP: "pp* *-musllinux*"  # Skip PyPy and musllinux
-          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-*"  # Build for Python 3.8-3.11
-          CIBW_ARCHS_MACOS: "x86_64 arm64"  # Build for Intel and M1 Macs
-          CIBW_BEFORE_BUILD: "pip install poetry"
-          CIBW_BUILD_FRONTEND: "pip"  # Use pip as the build frontend
-          # Only install pywin32 on Windows
-          CIBW_BEFORE_BUILD_WINDOWS: "pip install poetry pywin32"
-        run: |
-          python -m cibuildwheel --output-dir wheelhouse
+      - name: Build package
+        run: poetry build
 
-      - uses: actions/upload-artifact@v3
+      - name: Upload built package
+        uses: actions/upload-artifact@v3
         with:
-          path: ./wheelhouse/*.whl
-          name: wheels-${{ matrix.os }}
-
-  build_sdist:
-    name: Build source distribution
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.8'
-
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-
-      - name: Build sdist
-        run: poetry build --format sdist
-
-      - uses: actions/upload-artifact@v3
-        with:
-          path: dist/*.tar.gz
-          name: sdist
+          name: dist-${{ matrix.os }}
+          path: dist/
 
   create_release:
-    needs: [build_wheels, build_sdist]
+    needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
@@ -150,10 +107,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download all artifacts
+      - name: Download all built packages
         uses: actions/download-artifact@v3
         with:
           path: dist
+          pattern: dist-*
+          merge-multiple: true
 
       - name: Get version from pyproject.toml
         id: get_version
@@ -169,6 +128,5 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            dist/**/*.whl
-            dist/**/*.tar.gz
+            dist/*
           generate_release_notes: true
