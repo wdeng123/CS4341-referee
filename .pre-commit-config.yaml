@@ -1,0 +1,78 @@
+default_stages: [commit]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+      - id: debug-statements  # Check for debugger imports and py37+ breakpoint() calls
+      - id: check-merge-conflict  # Check for files with merge conflict strings
+
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3
+        args: [--line-length=88]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: isort (python)
+        args: ["--profile", "black", "--filter-files"]
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        additional_dependencies: [
+          'flake8-bugbear',  # Find likely bugs and design problems
+          'flake8-comprehensions',  # Better list/set/dict comprehensions
+          'flake8-docstrings',  # Check docstrings
+          'flake8-string-format',  # Check string formatting
+        ]
+        args: [
+          "--max-line-length=88",
+          "--extend-ignore=E203",  # For black compatibility
+        ]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [
+          'flake8-bugbear',
+          'flake8-comprehensions',
+          'flake8-docstrings',
+          'flake8-string-format',
+        ]
+        args: [
+          "--ignore-missing-imports",
+          "--disallow-untyped-defs",
+          "--check-untyped-defs",
+        ]
+
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: poetry run pytest
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+        types: [python]
+
+      - id: pytest-cov
+        name: pytest coverage
+        entry: poetry run pytest --cov=CS4341-referee --cov-fail-under=80
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [push]
