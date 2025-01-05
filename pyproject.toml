@@ -21,6 +21,9 @@ isort = "^5.0"
 mypy = "^1.0"
 pre-commit = "^3.0"
 
+[tool.poetry.scripts]
+cs4341-referee = "cs4341-referee.cli:main"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

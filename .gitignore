@@ -37,6 +37,7 @@ ENV/
 .coverage
 coverage.xml
 .pytest_cache/
+.mypy_cache/
 htmlcov/
 
 # Documentation
