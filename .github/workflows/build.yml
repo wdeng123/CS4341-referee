@@ -13,20 +13,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.8', '3.9', '3.10', '3.11']
-        exclude:
-          # Exclude non-Windows platforms for non-3.8 Python versions (pywin32 dependency)
-          - os: ubuntu-latest
-            python-version: '3.9'
-          - os: ubuntu-latest
-            python-version: '3.10'
-          - os: ubuntu-latest
-            python-version: '3.11'
-          - os: macos-latest
-            python-version: '3.9'
-          - os: macos-latest
-            python-version: '3.10'
-          - os: macos-latest
-            python-version: '3.11'
 
     steps:
     - uses: actions/checkout@v3
@@ -71,7 +57,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.8']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
     steps:
       - uses: actions/checkout@v3
         with:
