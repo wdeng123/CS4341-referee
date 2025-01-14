@@ -42,3 +42,7 @@ htmlcov/
 
 # Documentation
 docs/_build/
+
+# Dev stuff
+.example
+rebuild.sh

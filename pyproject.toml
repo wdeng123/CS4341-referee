@@ -6,12 +6,15 @@ authors = ["Jacob Molnia <jrmolnia@wpi.edu>"]
 license = "MIT"
 readme = "README.md"
 packages = [
-    { include = "src" }
+    { include = "src", from = "." }
 ]
 
 [tool.poetry.dependencies]
 python = "^3.8"
 pywin32 = {version = "^305", platform = "win32"}
+click = "^8.1.8"
+colorama = "^0.4.6"
+toml = "^0.10.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0"
@@ -20,9 +23,10 @@ black = "^23.0"
 isort = "^5.0"
 mypy = "^1.0"
 pre-commit = "^3.0"
+pytest-mock = "^3.14.0"
 
 [tool.poetry.scripts]
-cs4341-referee = "cs4341-referee.cli:main"
+cs4341-referee = "src.main:main"
 
 [build-system]
 requires = ["poetry-core"]
