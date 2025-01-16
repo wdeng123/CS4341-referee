@@ -1,12 +1,11 @@
 import random
 import time
-from enum import Enum
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, Optional, Set
 
 import click
-from colorama import Fore, Style, init
+from colorama import Fore, Style
 
-from ...abstract import AbstractGame, AbstractPlayer
+from ...abstract import AbstractGame
 from .lasker_player import LaskerPlayer
 
 
@@ -15,6 +14,8 @@ class LaskerMorris(AbstractGame):
     Implementation of Lasker Morris game.
     Manages game state including board, player hands, and move validation.
     """
+
+    # TODO: Make random colorselection a flag
 
     def __init__(self, player1_command: str, player2_command: str, visual: bool = True):
         """
@@ -86,7 +87,7 @@ class LaskerMorris(AbstractGame):
         )
 
         # Send current player staring command
-        self._current_player.write("r0 r0 r0")
+        self._current_player.write("blue")
 
     def make_move(self, move: str) -> bool:
         """
@@ -146,6 +147,7 @@ class LaskerMorris(AbstractGame):
             click.echo(
                 f"\n{Fore.RED}Invalid move: Target position {target} is already occupied{Style.RESET_ALL}"
             )
+            click.echo(self.board[target])
             return False
 
         # Validate source position
@@ -166,7 +168,8 @@ class LaskerMorris(AbstractGame):
             ):  # Only enforce adjacent moves if more than 3 pieces
                 if not self._check_corret_step(source, target):
                     click.echo(
-                        f"\n{Fore.RED}Invalid move: Cannot move from {source} to {target} - must move to adjacent position when you have more than 3 pieces{Style.RESET_ALL}"
+                        f"""\n{Fore.RED}Invalid move: Cannot move from {source} to {target} -
+                        must move to adjacent position when you have more than 3 pieces{Style.RESET_ALL}"""
                     )
                     return False
 
@@ -318,7 +321,10 @@ class LaskerMorris(AbstractGame):
         Returns:
             int: Total number of pieces on board
         """
-        return sum(1 for pos in self.board.values() if pos == color)
+        return (
+            sum(1 for pos in self.board.values() if pos == color)
+            + self.player_hands[color]
+        )
 
     def _execute_move(self, source: str, target: str, remove: str) -> None:
         """Execute a validated move."""
@@ -363,7 +369,7 @@ class LaskerMorris(AbstractGame):
             for letter in "abcdefg":
                 pos = f"{letter}{num}"
                 if pos in self.invalid_fields:
-                    row += f"  "
+                    row += "  "
                 elif self.board.get(pos) is None:
                     row += ". "
                 else:
@@ -373,13 +379,13 @@ class LaskerMorris(AbstractGame):
         click.echo("  a b c d e f g")
 
         # Show hands
-        click.echo(f"\nStones in hand:")
+        click.echo("\nStones in hand:")
         click.echo(f"{Fore.BLUE}Blue: {self.player_hands['blue']}{Style.RESET_ALL} ")
         click.echo(
             f"{Fore.YELLOW}Orange: {self.player_hands['orange']}{Style.RESET_ALL} "
         )
 
-    def determine_winner(self) -> Optional[AbstractPlayer]:
+    def determine_winner(self) -> Optional[LaskerPlayer]:
         """
         Check win conditions.
         Game ends if a player has fewer than 2 pieces total.
@@ -392,7 +398,7 @@ class LaskerMorris(AbstractGame):
                 return self._player2 if player == self._player1 else self._player1
         return None
 
-    def run_game(self) -> Optional[AbstractPlayer]:
+    def run_game(self) -> Optional[LaskerPlayer]:
         """Main game loop."""
 
         while not self.is_game_over:

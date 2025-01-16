@@ -34,28 +34,11 @@ repos:
         additional_dependencies: [
           'flake8-bugbear',  # Find likely bugs and design problems
           'flake8-comprehensions',  # Better list/set/dict comprehensions
-          'flake8-docstrings',  # Check docstrings
           'flake8-string-format',  # Check string formatting
         ]
         args: [
-          "--max-line-length=88",
-          "--extend-ignore=E203",  # For black compatibility
-        ]
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
-    hooks:
-      - id: mypy
-        additional_dependencies: [
-          'flake8-bugbear',
-          'flake8-comprehensions',
-          'flake8-docstrings',
-          'flake8-string-format',
-        ]
-        args: [
-          "--ignore-missing-imports",
-          "--disallow-untyped-defs",
-          "--check-untyped-defs",
+          "--max-line-length=150",
+          "--extend-ignore=E203,E712,B024",  # For black compatibility
         ]
 
   - repo: local

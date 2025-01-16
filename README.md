@@ -65,7 +65,7 @@ process.stdin.on('data', (input) => {
 ### Important Notes
 
 - Without flushing, your moves won't be sent to the referee immediately
-- Different languages handle buffering differently: 
+- Different languages handle buffering differently:
   - Python: Use `print(move, flush=True)`
   - Java: Use `System.out.flush()`
   - C++: Use `cout << move << endl` or `cout.flush()`

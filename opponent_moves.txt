@@ -55,3 +55,12 @@ h d1 r0
 h d3 r0
 h d1 r0
 h d3 r0
+h d1 r0
+h d3 r0
+r0 r0 r0
+h d1 r0
+blue
+blue
+blue
+h d1 r0
+h d3 r0

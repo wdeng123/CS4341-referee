@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional, Tuple
 from unittest.mock import Mock, patch
 
 import pytest
@@ -16,32 +16,32 @@ class MockGame(AbstractGame):
     def make_move(self, move: Any) -> bool:
         return True
 
-    def determine_winner(self):
+    def determine_winner(self) -> Optional[AbstractPlayer]:
         return None if not self._is_game_over else self._player1
 
 
 class MockPlayer(AbstractPlayer):
     """Mock implementation of AbstractPlayer for testing"""
 
-    def __init__(self, command="python3 mock_player.py"):
+    def __init__(self, command: str = "python3 mock_player.py") -> None:
         super().__init__(command)
 
 
 @pytest.fixture
-def mock_players():
+def mock_players() -> Tuple[MockPlayer, MockPlayer]:
     """Fixture providing two mock players"""
     return MockPlayer(), MockPlayer()
 
 
 @pytest.fixture
-def game(mock_players):
+def game(mock_players: Tuple[MockPlayer, MockPlayer]) -> MockGame:
     """Fixture providing a mock game instance"""
     player1, player2 = mock_players
     return MockGame(player1, player2)
 
 
 class TestAbstractPlayer:
-    def test_player_initialization(self):
+    def test_player_initialization(self) -> None:
         """Test player initializes with correct command"""
         command = "python3 test_player.py"
         player = MockPlayer(command)
@@ -49,7 +49,7 @@ class TestAbstractPlayer:
         assert player.process is None
 
     @patch("subprocess.Popen")
-    def test_player_start(self, mock_popen):
+    def test_player_start(self, mock_popen: Mock) -> None:
         """Test player process starts correctly"""
         player = MockPlayer()
         player.start()
@@ -57,7 +57,7 @@ class TestAbstractPlayer:
         assert player.process is not None
 
     @patch("subprocess.Popen")
-    def test_player_write(self, mock_popen):
+    def test_player_write(self, mock_popen: Mock) -> None:
         """Test writing to player process"""
         mock_stdin = Mock()
         mock_popen.return_value.stdin = mock_stdin
@@ -70,7 +70,7 @@ class TestAbstractPlayer:
         mock_stdin.flush.assert_called_once()
 
     @patch("subprocess.Popen")
-    def test_player_read(self, mock_popen):
+    def test_player_read(self, mock_popen: Mock) -> None:
         """Test reading from player process"""
         mock_stdout = Mock()
         mock_stdout.readline.return_value = "test_output\n"
@@ -84,7 +84,7 @@ class TestAbstractPlayer:
         mock_stdout.readline.assert_called_once()
 
     @patch("subprocess.Popen")
-    def test_player_stop(self, mock_popen):
+    def test_player_stop(self, mock_popen: Mock) -> None:
         """Test player process termination"""
         player = MockPlayer()
         player.start()
@@ -94,7 +94,7 @@ class TestAbstractPlayer:
         assert player.process is None
 
     @patch("subprocess.Popen")
-    def test_player_cleanup(self, mock_popen):
+    def test_player_cleanup(self, mock_popen: Mock) -> None:
         """Test player cleanup on deletion"""
         player = MockPlayer()
         player.start()
@@ -103,7 +103,9 @@ class TestAbstractPlayer:
 
 
 class TestAbstractGame:
-    def test_game_initialization(self, game, mock_players):
+    def test_game_initialization(
+        self, game: MockGame, mock_players: Tuple[MockPlayer, MockPlayer]
+    ) -> None:
         """Test game initializes with correct players and state"""
         player1, player2 = mock_players
         assert game._player1 == player1
@@ -111,7 +113,9 @@ class TestAbstractGame:
         assert game.current_player == player1
         assert not game.is_game_over
 
-    def test_switch_player(self, game, mock_players):
+    def test_switch_player(
+        self, game: MockGame, mock_players: Tuple[MockPlayer, MockPlayer]
+    ) -> None:
         """Test player turn switching"""
         player1, player2 = mock_players
         assert game.current_player == player1
@@ -122,27 +126,27 @@ class TestAbstractGame:
         game.switch_player()
         assert game.current_player == player1
 
-    def test_game_over_state(self, game):
+    def test_game_over_state(self, game: MockGame) -> None:
         """Test game over state management"""
         assert not game.is_game_over
         game._is_game_over = True
         assert game.is_game_over
         assert game.determine_winner() == game._player1
 
-    def test_abstract_methods_implementation(self):
+    def test_abstract_methods_implementation(self) -> None:
         """Test that abstract methods must be implemented"""
 
         class IncompleteGame(AbstractGame):
             pass
 
         with pytest.raises(TypeError):
-            IncompleteGame(MockPlayer(), MockPlayer())
+            _ = IncompleteGame(MockPlayer(), MockPlayer())
 
-    def test_make_move(self, game):
+    def test_make_move(self, game: MockGame) -> None:
         """Test move execution"""
-        assert game.make_move("test_move") == True
+        assert game.make_move("test_move") is True
 
-    def test_game_lifecycle(self, game):
+    def test_game_lifecycle(self, game: MockGame) -> None:
         """Test complete game lifecycle"""
         game.initialize_game()
         assert not game.is_game_over
