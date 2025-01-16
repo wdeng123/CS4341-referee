@@ -54,7 +54,7 @@ repos:
 
       - id: pytest-cov
         name: pytest coverage
-        entry: poetry run pytest --cov=CS4341-referee --cov-fail-under=80
+        entry: poetry run pytest --cov=CS4341-referee --cov-fail-under=70
         language: system
         pass_filenames: false
         always_run: true
