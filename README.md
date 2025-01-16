@@ -2,11 +2,11 @@
 [![Build and Test](https://github.com/jake-molnia/cs4341-referee/actions/workflows/build.yml/badge.svg)](https://github.com/jake-molnia/cs4341-referee/actions/workflows/build.yml)
 [![codecov](https://codecov.io/gh/jake-molnia/cs4341-referee/branch/main/graph/badge.svg)](https://codecov.io/gh/{username}/cs4341-referee)
 
-## PROGRAM COMMUNICATION
+## Program communication
 
 Here we describe the communication protocol for the Lasker Morris game referee. The game uses a process-based communication method where players interact through standard input/output streams, allowing for implementation in any programming language that supports these basic I/O operations.
 
-### PLAYER SETUP
+### Player Setup
 
 1. Each player must provide an executable command (e.g., `python3 player.py`) that will be used to start their program.
 
@@ -14,7 +14,7 @@ Here we describe the communication protocol for the Lasker Morris game referee. 
 
 3. The game manager will create two player processes and handle all communication between them.
 
-### COMMUNICATION FLOW
+### Communication Flow
 
 1. Game Initialization:
    - The game manager starts both player processes using their provided commands
@@ -44,7 +44,7 @@ Here we describe the communication protocol for the Lasker Morris game referee. 
    - Not all positions are valid (see invalid_fields in code)
    - The board has a 7x7 grid structure with specific valid positions
 
-### GAME RULES
+### Game Rules
 
 1. Initial State:
    - Each player starts with 10 stones in hand
@@ -62,7 +62,7 @@ Here we describe the communication protocol for the Lasker Morris game referee. 
    - A player loses if they make an invalid move
    - A player loses if they exceed the time limit
 
-### IMPLEMENTATION NOTES
+### Implementation Notes
 
 1. Player programs should:
    - Read moves from standard input
@@ -87,7 +87,7 @@ Here we describe the communication protocol for the Lasker Morris game referee. 
      - Current player's turn
      - Last move made
 
-### EXAMPLE GAME SEQUENCE
+### Example Game Sequence
 
 1. Game starts, processes created
 2. Blue player receives `blue`
