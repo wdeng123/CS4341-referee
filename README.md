@@ -1,167 +1,153 @@
-# cs4341-referee
+# Lasker Morris Game Referee
 [![Build and Test](https://github.com/jake-molnia/cs4341-referee/actions/workflows/build.yml/badge.svg)](https://github.com/jake-molnia/cs4341-referee/actions/workflows/build.yml)
 [![codecov](https://codecov.io/gh/jake-molnia/cs4341-referee/branch/main/graph/badge.svg)](https://codecov.io/gh/{username}/cs4341-referee)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-## Program communication
+A Python implementation of a referee for the Lasker Morris board game, designed for programming competitions and AI development.
 
-Here we describe the communication protocol for the Lasker Morris game referee. The game uses a process-based communication method where players interact through standard input/output streams, allowing for implementation in any programming language that supports these basic I/O operations.
+## Table of Contents
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Game Rules](#game-rules)
+- [Communication Protocol](#communication-protocol)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
 
-### Player Setup
+## Features
+- 🎮 Complete Lasker Morris game implementation
+- 🤖 Process-based player communication
+- 🎯 Move validation and game state tracking
+- 📊 Visual game state representation
+- 🔄 Automatic turn management
+- ⏱️ Time limit enforcement
+- 🏆 Win condition detection
 
-1. Each player must provide an executable command (e.g., `python3 player.py`) that will be used to start their program.
+## Quick Start
 
-2. Players will be randomly assigned either blue or orange color at the start of the game. The blue player always moves first.
+```bash
+# Install the referee
+pip install git+https://github.com/jake-molnia/cs4341-referee.git
 
-3. The game manager will create two player processes and handle all communication between them.
-
-### Communication Flow
-
-1. Game Initialization:
-   - The game manager starts both player processes using their provided commands
-   - Players are randomly assigned colors (blue or orange)
-   - The blue player receives "blue" as their first input
-   - The game begins with the blue player's turn
-
-2. Move Format:
-   A move consists of three parts in the format: "A B C" where:
-   - A: Current stone location (use 'h1'/'h2' if placing from hand)
-   - B: Target board position
-   - C: Remove opponent's stone location (use 'r0' if no removal)
-
-   Example moves:
-   - `h1 d1 r0` (place new stone at d1, no removal)
-   - `d1 d2 e3` (move stone from d1 to d2, remove opponent's stone at e3)
-
-3. Turn Structure:
-   - Current player reads opponent's last move (except for first move)
-   - Current player calculates and outputs their move
-   - Game manager validates the move
-   - If valid, the move is sent to the other player
-   - If invalid, the current player loses
-
-4. Board Positions:
-   - Valid positions are labeled a1 through g7
-   - Not all positions are valid (see invalid_fields in code)
-   - The board has a 7x7 grid structure with specific valid positions
-
-### Game Rules
-
-1. Initial State:
-   - Each player starts with 10 stones in hand
-   - The board begins empty
-   - Blue player moves first
-
-2. Valid Moves:
-   - Players can place stones from their hand using 'h' as source
-   - When moving placed stones, must move to adjacent positions unless player has exactly 3 pieces
-   - Forming a mill (3 in a row) allows removing an opponent's stone
-   - Must remove an opponent's stone when forming a mill
-
-3. Game Ending Conditions:
-   - A player loses if they have fewer than 3 pieces total
-   - A player loses if they make an invalid move
-   - A player loses if they exceed the time limit
-
-### Implementation Notes
-
-1. Player programs should:
-   - Read moves from standard input
-   - Write moves to standard output
-   - Format all moves as described above
-   - Handle invalid moves from opponents
-   - Track game state internally
-
-2. Common Errors to Avoid:
-   - Moving opponent's pieces
-   - Moving to invalid positions
-   - Moving to occupied positions
-   - Not removing stones when forming mills
-   - Removing own stones
-   - Moving to non-adjacent positions when having more than 3 pieces
-
-3. Visualization:
-   - The game manager provides a visual representation of the board
-   - Shows current state including:
-     - Pieces on board
-     - Stones remaining in hand
-     - Current player's turn
-     - Last move made
-
-### Example Game Sequence
-
-1. Game starts, processes created
-2. Blue player receives `blue`
-3. Blue player outputs `h1 d1 r0`
-4. Orange player receives `orange`
-5. Orange player receives `h1 d1 r0`
-6. Orange player outputs `h2 g7 r0`
-7. Game continues until win condition met
-
-Note: All communication must be precisely formatted. Any deviation from the expected format will result in an invalid move and loss of game.
+# Start a game between two players
+lasker-morris start -p1 "python3 player1.py" -p2 "python3 player2.py"
+```
 
 ## Installation
 
-You can install this package directly from GitHub using pip:
-
+### Using pip
 ```bash
+# Install latest version
 pip install git+https://github.com/jake-molnia/cs4341-referee.git
-```
 
-Or install a specific version:
-
-```bash
+# Install specific version
 pip install git+https://github.com/jake-molnia/cs4341-referee.git@v0.1.0
 ```
 
-## Player Program
+### From source
+```bash
+git clone https://github.com/jake-molnia/cs4341-referee.git
+cd cs4341-referee
+pip install -e .
+```
 
-Your player program should follow these communication rules to work with the referee:
+## Usage
 
-### Basic Requirements
-- Read moves/input from stdin (standard input)
-- Write moves/output to stdout (standard output)
-- Each message must be on a new line
-- Always flush output after writing
+### Command Line Interface
+```bash
+# Start a game with visualization
+lasker-morris start -p1 "python3 player1.py" -p2 "python3 player2.py" -v
 
-### Example Templates
+# Start a game without visualization
+lasker-morris start -p1 "./player1" -p2 "./player2" --no-visual
+
+# Get help
+lasker-morris --help
+```
+
+### Python API
+```python
+from lasker_morris import LaskerMorris
+
+# Create game instance
+game = LaskerMorris("python3 player1.py", "python3 player2.py", visual=True)
+
+# Run the game
+winner = game.run_game()
+
+# Check winner
+if winner:
+    print(f"Winner: {winner.get_color()}")
+else:
+    print("Game ended in a draw")
+```
+
+## Game Rules
+
+### Board Layout
+The game is played on a 7x7 grid with specific valid positions. The board looks like this:
+
+TODO: Insert picture of game
+
+### Basic Rules
+- Players start with 10 stones each
+- Blue player moves first
+- Stones can be placed from hand or moved on board
+- Moving to adjacent positions only (except with 3 pieces)
+- Forming 3-in-a-row (mill) allows capturing
+- Game ends when a player has fewer than 3 pieces
+
+## Communication Protocol
+
+### Move Format
+Moves are formatted as "A B C" where:
+- A: Source position ('h1'/'h2' for hand, or board position)
+- B: Target position
+- C: Capture position ('r0' for no capture)
+
+Example: `h1 d1 r0` or `d1 d2 e3`
+
+### Player Implementation Templates
 
 #### Python
 ```python
 import sys
 
-while True:
-    game_input = input().strip()  # Read and clean input
-    move = "your move logic here"
-    print(move, flush=True)  # flush=True is crucial!
+def main():
+    while True:
+        game_input = input().strip()
+        # Your move logic here
+        move = "h1 d1 r0"  # Example move
+        print(move, flush=True)
+
+if __name__ == "__main__":
+    main()
 ```
 
 #### Java
-
 ```java
-Scanner scanner = new Scanner(System.in);
-while (scanner.hasNextLine()) {
-    String input = scanner.nextLine();
-    String move = "your move logic here";
-    System.out.println(move);
-    System.out.flush();  // Don't forget to flush!
+import java.util.Scanner;
+
+public class Player {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNextLine()) {
+            String input = scanner.nextLine();
+            // Your move logic here
+            String move = "h1 d1 r0";  // Example move
+            System.out.println(move);
+            System.out.flush();
+        }
+    }
 }
 ```
 
-#### JavaScript (Node.js)
+For more templates and details, see [Communication Protocol Documentation](docs/PROTOCOL.md)
 
-```javascript
-process.stdin.on('data', (input) => {
-    const move = "your move logic here";
-    console.log(move);  // Node.js auto-flushes console.log
-});
-```
 
-### Important Notes
+## License
 
-- Without flushing, your moves won't be sent to the referee immediately
-- Different languages handle buffering differently:
-  - Python: Use `print(move, flush=True)`
-  - Java: Use `System.out.flush()`
-  - C++: Use `cout << move << endl` or `cout.flush()`
-  - Node.js: `console.log()` auto-flushes
-- Test your program thoroughly to ensure moves are being sent correctly
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
