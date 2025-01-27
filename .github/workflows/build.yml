@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
 
     steps:
     - uses: actions/checkout@v3
@@ -57,7 +57,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
     steps:
       - uses: actions/checkout@v3
         with:
@@ -79,7 +79,7 @@ jobs:
       - name: Upload built package
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ matrix.os }}
+          name: dist-${{ matrix.os }}-${{ matrix.python-version }}
           path: dist/
 
   create_release:
@@ -97,7 +97,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           path: dist
-          pattern: dist-*
+          pattern: 'dist-*-*'
           merge-multiple: true
 
       - name: Get version from pyproject.toml
