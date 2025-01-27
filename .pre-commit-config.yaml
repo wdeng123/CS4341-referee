@@ -38,7 +38,7 @@ repos:
         ]
         args: [
           "--max-line-length=150",
-          "--extend-ignore=E203,E712,B024",  # For black compatibility
+          "--extend-ignore=E203,E712,B024,E741,C420,B007",  # For black compatibility
         ]
 
   - repo: local

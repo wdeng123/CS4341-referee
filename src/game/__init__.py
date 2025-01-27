@@ -1,3 +1,3 @@
-from .implementation import LaskerMorris
+from .implementation import LaskerMorris, TicTacToe
 
-__all__ = ["LaskerMorris"]
+__all__ = ["LaskerMorris", "TicTacToe"]

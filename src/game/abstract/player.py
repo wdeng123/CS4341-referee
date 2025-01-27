@@ -7,6 +7,7 @@ subclasses to implement game-specific logic and communication formats.
 import shlex
 import subprocess
 from abc import ABC
+from time import sleep
 from typing import Optional
 
 
@@ -53,6 +54,7 @@ class AbstractPlayer(ABC):
 
     def stop(self) -> None:
         """Terminate the player process safely and cleanup resources."""
+        sleep(0.25)
         if self.process:
             try:
                 # First attempt graceful termination first closing the pipes and then the process

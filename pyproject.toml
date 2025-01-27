@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cs4341-referee"
-version = "0.1.1"
+version = "0.1.2"
 description = "A referee program designed for a Artificial Integence class taught at WPI"
 authors = ["Jacob Molnia <jrmolnia@wpi.edu>"]
 license = "MIT"
@@ -10,11 +10,14 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.9,<4.0"
 pywin32 = {version = "^305", platform = "win32"}
 click = "^8.1.8"
 colorama = "^0.4.6"
 toml = "^0.10.2"
+flask = "^3.1.0"
+flask-cors = "^5.0.0"
+waitress = "^3.0.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0"

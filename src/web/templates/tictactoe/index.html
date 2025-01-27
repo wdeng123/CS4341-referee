@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-tac-toe Game</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #475569;
+            --background: #f8fafc;
+            --board: #f1f5f9;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--background);
+            color: var(--secondary);
+            padding: 2rem;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 3rem;
+            background: linear-gradient(135deg, #fff, #f8fafc);
+            border-radius: 2rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.05);
+        }
+        header h1 {
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            letter-spacing: -0.025em;
+        }
+        header p.subtitle {
+            font-size: 1.25rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .game-container {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .board {
+            background: var(--board);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            width: 400px;
+            height: 400px;
+        }
+        .board-svg .cell {
+            fill: none;
+            stroke: #475569;
+            stroke-width: 2;
+        }
+        .x-piece { stroke: #2563eb; stroke-width: 3; }
+        .o-piece { stroke: #f59e0b; stroke-width: 3; fill: none; }
+        .controls {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            min-width: 300px;
+        }
+        .status {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: var(--board);
+            border-radius: 0.5rem;
+        }
+        .button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        @media (max-width: 768px) {
+            .board {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Tic-tac-toe</h1>
+            <p class="subtitle">A classic game of X's and O's</p>
+        </header>
+        <div class="game-container">
+            <div class="board">
+                <svg class="board-svg" viewBox="0 0 300 300">
+                    <!-- Grid lines -->
+                    <line class="cell" x1="100" y1="0" x2="100" y2="300"/>
+                    <line class="cell" x1="200" y1="0" x2="200" y2="300"/>
+                    <line class="cell" x1="0" y1="100" x2="300" y2="100"/>
+                    <line class="cell" x1="0" y1="200" x2="300" y2="200"/>
+                    <g id="board-pieces"></g>
+                </svg>
+            </div>
+
+            <div class="controls">
+                <div class="status" id="currentPlayer">
+                    Current Player: <span id="player">X</span>
+                </div>
+                <div class="status" id="moveInfo">Last Move: None</div>
+                <button class="button" id="prevMove">← Previous</button>
+                <button class="button" id="nextMove">Next →</button>
+                <div id="moveCount">Move: 0 / 0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {{ game_data|tojson|safe }};
+        let currentMoveIndex = 0;
+
+        const coordMap = {
+            'a1': {x: 50, y: 50}, 'b1': {x: 150, y: 50}, 'c1': {x: 250, y: 50},
+            'a2': {x: 50, y: 150}, 'b2': {x: 150, y: 150}, 'c2': {x: 250, y: 150},
+            'a3': {x: 50, y: 250}, 'b3': {x: 150, y: 250}, 'c3': {x: 250, y: 250}
+        };
+
+        function createXPiece(x, y) {
+            const size = 40;
+            const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            group.classList.add("x-piece");
+
+            const line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line1.setAttribute("x1", x - size/2);
+            line1.setAttribute("y1", y - size/2);
+            line1.setAttribute("x2", x + size/2);
+            line1.setAttribute("y2", y + size/2);
+
+            const line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line2.setAttribute("x1", x + size/2);
+            line2.setAttribute("y1", y - size/2);
+            line2.setAttribute("x2", x - size/2);
+            line2.setAttribute("y2", y + size/2);
+
+            group.appendChild(line1);
+            group.appendChild(line2);
+            return group;
+        }
+
+        function createOPiece(x, y) {
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", x);
+            circle.setAttribute("cy", y);
+            circle.setAttribute("r", 20);
+            circle.classList.add("o-piece");
+            return circle;
+        }
+
+        function updateBoard(board) {
+            const piecesGroup = document.getElementById('board-pieces');
+            piecesGroup.innerHTML = '';
+
+            Object.entries(board).forEach(([pos, symbol]) => {
+                if (!symbol) return;
+
+                const coords = coordMap[pos];
+                const piece = symbol === 'X' ?
+                    createXPiece(coords.x, coords.y) :
+                    createOPiece(coords.x, coords.y);
+                piecesGroup.appendChild(piece);
+            });
+        }
+
+        function updateState(index) {
+            if (index >= 0 && index < gameState.history.moves.length) {
+                const board = gameState.history.boards[index];
+                const move = gameState.history.moves[index];
+
+                updateBoard(board);
+                document.getElementById('player').textContent = gameState.currentPlayer;
+                document.getElementById('moveInfo').textContent = `Last Move: ${move?.move || 'None'}`;
+                document.getElementById('moveCount').textContent =
+                    `Move: ${index + 1} / ${gameState.history.moves.length}`;
+                currentMoveIndex = index;
+            }
+        }
+
+        document.getElementById('prevMove').addEventListener('click', () => {
+            if (currentMoveIndex > 0) {
+                updateState(currentMoveIndex - 1);
+            }
+        });
+
+        document.getElementById('nextMove').addEventListener('click', () => {
+            if (currentMoveIndex < gameState.history.moves.length - 1) {
+                updateState(currentMoveIndex + 1);
+            }
+        });
+
+        async function fetchGameState() {
+            try {
+                const response = await fetch('/game-state', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    const data = await response.json();
+                    const wasAtLatest = currentMoveIndex === gameState.history.moves.length - 1;
+                    Object.assign(gameState, data);
+                    if (wasAtLatest) {
+                        updateState(data.history.moves.length - 1);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching game state:', error);
+            }
+        }
+
+        updateState(currentMoveIndex);
+        setInterval(fetchGameState, 1000);
+    </script>
+</body>
+</html>

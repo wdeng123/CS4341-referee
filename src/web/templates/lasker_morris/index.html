@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lasker Morris Game</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #475569;
+            --background: #f8fafc;
+            --board: #f1f5f9;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--background);
+            color: var(--secondary);
+            padding: 2rem;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 3rem;
+            background: linear-gradient(135deg, #fff, #f8fafc);
+            border-radius: 2rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.05);
+        }
+        header h1 {
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            letter-spacing: -0.025em;
+        }
+        header p.subtitle {
+            font-size: 1.25rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        header p.author {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+        .rules-container {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 48rem;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        .rules-header {
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        .rules-section {
+            background: var(--background);
+            padding: 1.5rem;
+            border-radius: 1rem;
+        }
+        .rules-section h3 {
+            color: var(--primary);
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+        }
+        .rules-section ul {
+            list-style: none;
+            space-y: 0.75rem;
+        }
+        .rules-section li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+            color: var(--secondary);
+        }
+        .rules-section li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .game-container {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .board {
+            background: var(--board);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            width: 600px;
+            height: 600px;
+        }
+        .piece { transition: fill 0.3s; }
+        .piece.blue { fill: #2563eb; }
+        .piece.orange { fill: #f59e0b; }
+        .controls {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            min-width: 300px;
+        }
+        .status {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: var(--board);
+            border-radius: 0.5rem;
+        }
+        .hands {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        @media (max-width: 768px) {
+            .board {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Lasker Morris</h1>
+            <p class="subtitle">A variant of Nine Men's Morris invented by Emanuel Lasker</p>
+            <p class="author">Part of the CS4341 Referee Implementation at WPI</p>
+        </header>
+        <div class="game-container">
+            <div class="board">
+                <svg class="board-svg" viewBox="0 0 400 400">
+                    <rect class="board-line" x="50" y="50" width="300" height="300" fill="none" stroke="#475569" stroke-width="2"/>
+                    <rect class="board-line" x="100" y="100" width="200" height="200" fill="none" stroke="#475569" stroke-width="2"/>
+                    <rect class="board-line" x="150" y="150" width="100" height="100" fill="none" stroke="#475569" stroke-width="2"/>
+                    <line class="board-line" x1="200" y1="50" x2="200" y2="150" stroke="#475569" stroke-width="2"/>
+                    <line class="board-line" x1="200" y1="250" x2="200" y2="350" stroke="#475569" stroke-width="2"/>
+                    <line class="board-line" x1="50" y1="200" x2="150" y2="200" stroke="#475569" stroke-width="2"/>
+                    <line class="board-line" x1="250" y1="200" x2="350" y2="200" stroke="#475569" stroke-width="2"/>
+                    <g id="board-pieces"></g>
+                </svg>
+            </div>
+
+            <div class="controls">
+                <div class="status" id="currentPlayer">
+                    Current Player: <span id="player">Blue</span>
+                </div>
+                <div class="hands">
+                    <div>Blue: <span id="blueHand">0</span></div>
+                    <div>Orange: <span id="orangeHand">0</span></div>
+                </div>
+                <div class="status" id="moveInfo">Last Move: None</div>
+                <button class="button" id="prevMove">← Previous</button>
+                <button class="button" id="nextMove">Next →</button>
+                <div id="moveCount">Move: 0 / 0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {{ game_data|tojson|safe }};
+        let currentMoveIndex = gameState.history.moves.length - 1;
+
+        const coordMap = {
+            'a1': {x: 50, y: 50}, 'a4': {x: 50, y: 200}, 'a7': {x: 50, y: 350},
+            'b2': {x: 100, y: 100}, 'b4': {x: 100, y: 200}, 'b6': {x: 100, y: 300},
+            'c3': {x: 150, y: 150}, 'c4': {x: 150, y: 200}, 'c5': {x: 150, y: 250},
+            'd1': {x: 200, y: 50}, 'd2': {x: 200, y: 100}, 'd3': {x: 200, y: 150},
+            'd5': {x: 200, y: 250}, 'd6': {x: 200, y: 300}, 'd7': {x: 200, y: 350},
+            'e3': {x: 250, y: 150}, 'e4': {x: 250, y: 200}, 'e5': {x: 250, y: 250},
+            'f2': {x: 300, y: 100}, 'f4': {x: 300, y: 200}, 'f6': {x: 300, y: 300},
+            'g1': {x: 350, y: 50}, 'g4': {x: 350, y: 200}, 'g7': {x: 350, y: 350}
+        };
+
+        function updateBoard(board) {
+            const piecesGroup = document.getElementById('board-pieces');
+            piecesGroup.innerHTML = '';
+
+            Object.entries(board).forEach(([pos, color]) => {
+                if (!color) return;
+
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", coordMap[pos].x);
+                circle.setAttribute("cy", coordMap[pos].y);
+                circle.setAttribute("r", "8");
+                circle.setAttribute("class", `piece ${color.toLowerCase()}`);
+                piecesGroup.appendChild(circle);
+            });
+        }
+
+        function updateState(index) {
+            if (index >= 0 && index < gameState.history.moves.length) {
+                const board = gameState.history.boards[index];
+                const hands = gameState.history.hands[index];
+                const move = gameState.history.moves[index];
+
+                updateBoard(board);
+                document.getElementById('player').textContent = gameState.currentPlayer;
+                document.getElementById('blueHand').textContent = hands.blue;
+                document.getElementById('orangeHand').textContent = hands.orange;
+                document.getElementById('moveInfo').textContent = `Last Move: ${move?.move || 'None'}`.trim();                currentMoveIndex = index;
+            }
+        }
+
+        document.getElementById('prevMove').addEventListener('click', () => {
+            updateState(currentMoveIndex - 1);
+        });
+
+        document.getElementById('nextMove').addEventListener('click', () => {
+            updateState(currentMoveIndex + 1);
+        });
+
+        async function fetchGameState() {
+            try {
+                const response = await fetch('/game-state', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    const data = await response.json();
+                    const wasAtLatest = currentMoveIndex === gameState.history.moves.length - 1;
+                    Object.assign(gameState, data);
+                    document.getElementById('moveCount').textContent =
+                        `Move: ${currentMoveIndex + 1} / ${gameState.history.moves.length}`;
+                    if (wasAtLatest) {
+                        updateState(data.history.moves.length - 1);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching game state:', error);
+            }
+        }
+        updateState(currentMoveIndex);
+        setInterval(fetchGameState, 1000);
+    </script>
+</body>
+</html>

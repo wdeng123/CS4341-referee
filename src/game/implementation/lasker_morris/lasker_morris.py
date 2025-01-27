@@ -1,44 +1,63 @@
 import random
-import time
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from typing import Dict, Optional, Set
 
 import click
 from colorama import Fore, Style
 
+from ....config import LaskerConfig
 from ...abstract import AbstractGame
 from .lasker_player import LaskerPlayer
+from .web.lasker_web import LaskerMorrisWeb
 
 
 class LaskerMorris(AbstractGame):
-    """
-    Implementation of Lasker Morris game.
-    Manages game state including board, player hands, and move validation.
-    """
+    """Implementation of Lasker Morris game. Manages game state including board, player hands, and move validation."""
 
-    # TODO: Make random colorselection a flag
-
-    def __init__(self, player1_command: str, player2_command: str, visual: bool = True):
-        """
-        Initialize game with player commands and randomly assign colors.
+    def __init__(
+        self,
+        player1_command: str,
+        player2_command: str,
+        visual: bool = LaskerConfig.DEFAULT_VIS,
+        select_rand: bool = LaskerConfig.DEFAULT_RAND,
+        timeout: int = LaskerConfig.GAME_TIMEOUT,
+        debug: bool = LaskerConfig.DEFAULT_DEBUG,
+        logging: bool = LaskerConfig.DEFAULT_LOG,
+    ):
+        """Initialize game with player commands and game settings.
 
         Args:
             player1_command: Shell command for first player
             player2_command: Shell command for second player
+            visual: Enable visualization if True
+            select_rand: Randomly assign colors if True
+            timeout: Move timeout in seconds
+            debug: Enable debug output if True
+            logging: Enable logging if True
         """
-        # Randomly assign colors to players
-        colors = ["blue", "orange"]
-        random.shuffle(colors)
+        self.move_timeout = timeout
+        self.game_history = []
+        self.board_states = []
+        self.hand_states = []
+        self.debug = debug
 
-        # Create players with assigned colors
+        # Initialize players with randomly assigned colors
+        colors = ["blue", "orange"]
+        if select_rand:
+            random.shuffle(colors)
+
         player1 = LaskerPlayer(player1_command, colors[0])
         player2 = LaskerPlayer(player2_command, colors[1])
-
-        # Initialize parent class
         super().__init__(player1, player2)
 
         # Initialize game state
-        self.board: Dict[str, Optional[str]] = {}  # Maps position to player color
-        self.player_hands: Dict[str, int] = {"blue": 10, "orange": 10}
+        self.board: Dict[str, Optional[str]] = {}
+        self.player_hands: Dict[str, int] = {
+            "blue": LaskerConfig.HAND_SIZE,
+            "orange": LaskerConfig.HAND_SIZE,
+        }
+
+        # Define invalid board positions
         self.invalid_fields: Set[str] = {
             "a2",
             "a3",
@@ -66,32 +85,33 @@ class LaskerMorris(AbstractGame):
             "g5",
             "g6",
         }
+
         self.visual = visual
+        self.web = LaskerMorrisWeb(self)
         self.initialize_game()
 
     def initialize_game(self) -> None:
-        """Initialize game board and start player processes."""
-        # Initialize empty board (1-7, a-g)
+        """Initialize empty game board and start player processes."""
+        # Initialize empty board positions
         for num in range(1, 8):
             for letter in "abcdefg":
-                position = f"{letter}{num}"
-                self.board[position] = None
+                self.board[f"{letter}{num}"] = None
 
-        # Start player processes
+        # Start player processes and web server
         self._player1.start()
         self._player2.start()
+
+        if self.visual:
+            self.web.start_web_server()
 
         # Ensure blue player goes first
         self._current_player = (
             self._player1 if self._player1.is_blue() else self._player2
         )
-
-        # Send current player staring command
         self._current_player.write("blue")
 
     def make_move(self, move: str) -> bool:
-        """
-        Execute a player's move if valid.
+        """Execute a player's move if valid.
 
         Args:
             move: String in format "A B C" where:
@@ -103,31 +123,25 @@ class LaskerMorris(AbstractGame):
             bool: True if move was valid and executed
         """
         try:
-            # Parse move
             parts = move.strip().split()
             if len(parts) != 3:
                 return False
 
             source, target, remove = parts
-
-            # Validate move
             if not self._is_valid_move(source, target, remove):
                 return False
 
-            # Execute move
             self._execute_move(source, target, remove)
 
-            if self.visual:
+            if self.debug:
                 self._show_state(move)
 
             return True
-
         except Exception:
             return False
 
     def _is_valid_move(self, source: str, target: str, remove: str) -> bool:
-        """
-        Validate move according to game rules with descriptive error messages.
+        """Validate move according to game rules.
 
         Args:
             source: Starting position of stone ('h' if from hand)
@@ -143,88 +157,106 @@ class LaskerMorris(AbstractGame):
                 f"\n{Fore.RED}Invalid move: Target position {target} does not exist on the board{Style.RESET_ALL}"
             )
             return False
+
         if self.board[target] is not None:
             click.echo(
                 f"\n{Fore.RED}Invalid move: Target position {target} is already occupied{Style.RESET_ALL}"
             )
-            click.echo(self.board[target])
             return False
 
         # Validate source position
-        if source != "h":  # If moving a stone (not from hand)
+        if source in ["h1", "h2"]:
+            # Validate hand moves
+            is_player1 = self._current_player == self._player1
+            correct_hand = "h1" if is_player1 else "h2"
+
+            if source != correct_hand:
+                click.echo(
+                    f"\n{Fore.RED}Invalid move: Player tried to use opponent's hand ({source}){Style.RESET_ALL}"
+                )
+                return False
+
+            if self.player_hands[self._current_player.get_color()] <= 0:
+                click.echo(
+                    f"\n{Fore.RED}Invalid move: {self._current_player.get_color()} player has no stones left in hand{Style.RESET_ALL}"
+                )
+                return False
+        else:
+            # Validate board moves
             if source in self.invalid_fields or source not in self.board:
                 click.echo(
                     f"\n{Fore.RED}Invalid move: Source position {source} does not exist on the board{Style.RESET_ALL}"
                 )
                 return False
-            if self.board[source] != self._current_player.color:
+
+            if self.board[source] != self._current_player.get_color():
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: {self._current_player.color} player tried to move opponent's stone from {source}{Style.RESET_ALL}"
+                    f"\n{Fore.RED}"
+                    f"Invalid move: {self._current_player.get_color()} player "
+                    f"tried to move opponent's stone from {source}"
+                    f"{Style.RESET_ALL}"
                 )
                 return False
-            # Check if player has exactly 3 pieces for flying rule
-            if (
-                self._count_player_pieces(self._current_player.color) > 3
-            ):  # Only enforce adjacent moves if more than 3 pieces
+
+            # Check adjacent moves rule (except when player has exactly 3 pieces)
+            if self._count_player_pieces(self._current_player.get_color()) > 3:
                 if not self._check_corret_step(source, target):
                     click.echo(
-                        f"""\n{Fore.RED}Invalid move: Cannot move from {source} to {target} -
-                        must move to adjacent position when you have more than 3 pieces{Style.RESET_ALL}"""
+                        f"\n{Fore.RED}"
+                        f"Invalid move: Cannot move from {source} to {target} - "
+                        f"must move to adjacent position when you have more than 3 pieces"
+                        f"{Style.RESET_ALL}"
                     )
                     return False
 
-        elif self.player_hands[self._current_player.get_color()] <= 0:
-            click.echo(
-                f"\n{Fore.RED}Invalid move: {self._current_player.color} player has no stones left in hand{Style.RESET_ALL}"
-            )
-            return False
-
         # Validate remove position
-        if remove != "r0":  # If removing opponent's stone
+        if remove != "r0":
             if remove in self.invalid_fields or remove not in self.board:
                 click.echo(
                     f"\n{Fore.RED}Invalid move: Cannot remove stone - position {remove} does not exist on the board{Style.RESET_ALL}"
                 )
                 return False
+
             if self.board[remove] is None:
                 click.echo(
                     f"\n{Fore.RED}Invalid move: Cannot remove stone - position {remove} is empty{Style.RESET_ALL}"
                 )
                 return False
-            if self.board[remove] == self.current_player.color:
+
+            if self.board[remove] == self._current_player.get_color():
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: {self._current_player.color} player tried to remove their own stone at {remove}{Style.RESET_ALL}"
+                    f"\n{Fore.RED}"
+                    f"Invalid move: {self._current_player.get_color()} player "
+                    f"tried to remove their own stone at {remove}"
+                    f"{Style.RESET_ALL}"
                 )
                 return False
+
             if not self._is_mill(source, target):
                 click.echo(
                     f"\n{Fore.RED}Invalid move: Cannot remove opponent's stone - move does not form a mill{Style.RESET_ALL}"
                 )
                 return False
-        else:  # If not removing any stone
-            if self._is_mill(source, target):
-                click.echo(
-                    f"\n{Fore.RED}Invalid move: Must remove an opponent's stone after forming a mill{Style.RESET_ALL}"
-                )
-                return False
+        elif self._is_mill(source, target):
+            click.echo(
+                f"\n{Fore.RED}Invalid move: Must remove an opponent's stone after forming a mill{Style.RESET_ALL}"
+            )
+            return False
 
         return True
 
     def _is_mill(self, source: str, target: str) -> bool:
-        """
-        Check if placing a stone at target position forms a mill.
+        """Check if placing a stone at target position forms a mill.
 
         Args:
             source: Starting position of the stone (or 'h' if from hand)
             target: Target position where stone is placed
 
         Returns:
-            bool: True if move forms a mill, False otherwise
+            bool: True if move forms a mill
         """
-        # Get the color of the current player
-        color = self.current_player.color
+        color = self._current_player.color
 
-        # Define possible mill combinations (each list represents positions that form a mill)
         mills = [
             # Horizontal mills
             ["a1", "a4", "a7"],
@@ -246,39 +278,32 @@ class LaskerMorris(AbstractGame):
             ["a7", "d7", "g7"],
         ]
 
-        # Check each possible mill combination
         for mill in mills:
-            if target in mill:  # Only check mills that include the target position
-                # Count stones of current player's color in this mill combination
+            if target in mill:
                 stones_in_mill = 0
                 for pos in mill:
-                    if pos == target:  # Count the target position
+                    if pos == target:
                         stones_in_mill += 1
-                    elif (
-                        pos != source and self.board[pos] == color
-                    ):  # Count existing stones
+                    elif pos != source and self.board[pos] == color:
                         stones_in_mill += 1
 
-                # If all three positions in the mill are occupied by player's stones
                 if stones_in_mill == 3:
                     return True
 
         return False
 
     def _check_corret_step(self, source: str, target: str) -> bool:
-        """
-        Check if a move from source to target is to a neighboring position.
+        """Check if a move from source to target is to a neighboring position.
 
         Args:
             source: Starting position of the stone
             target: Target position where stone will move
 
         Returns:
-            bool: True if target is a neighbor of source, False otherwise
+            bool: True if target is a neighbor of source
         """
-        # Define adjacent positions for each valid board position
         neighbors = {
-            "a1": ["a4", "d1", "a4"],
+            "a1": ["a4", "d1"],
             "a4": ["a1", "a7", "b4"],
             "a7": ["a4", "d7"],
             "b2": ["b4", "d2"],
@@ -304,16 +329,12 @@ class LaskerMorris(AbstractGame):
             "g7": ["d7", "g4"],
         }
 
-        # If either position is invalid, return False
-        if source not in neighbors or target not in neighbors:
-            return False
-
-        # Check if target is in the list of neighbors for the source position
-        return target in neighbors[source]
+        return (
+            source in neighbors and target in neighbors and target in neighbors[source]
+        )
 
     def _count_player_pieces(self, color: str) -> int:
-        """
-        Count total number of pieces a player has on the board.
+        """Count total number of pieces a player has on the board.
 
         Args:
             color: Player color to count pieces for
@@ -327,32 +348,87 @@ class LaskerMorris(AbstractGame):
         )
 
     def _execute_move(self, source: str, target: str, remove: str) -> None:
-        """Execute a validated move."""
+        """Execute a validated move and update game state."""
         current_color = self._current_player.get_color()
 
-        # Handle move from hand
-        if source == "h":
+        # Update board state
+        if source in ["h1", "h2"]:
             self.player_hands[current_color] -= 1
         else:
             self.board[source] = None
 
-        # Place stone on target
         self.board[target] = current_color
 
-        # Handle removal if specified
         if remove != "r0":
             self.board[remove] = None
 
-    def _show_state(self, move: Optional[str] = None) -> None:
-        """Show game state if visualization is enabled."""
-        # Calculate number of lines to clear (1 for each row of the board + fixed lines)
-        num_lines = 7  # board rows
-        num_lines += 13  # fixed lines (move, turn, "Board:", coordinate row, blank lines, hands header, 2 hand states)
+        # Record move history
+        move_data = {
+            "move": f"{source} {target} {remove}",
+            "player": current_color,
+            "board": self.board.copy(),
+            "hands": self.player_hands.copy(),
+        }
+        self.game_history.append(move_data)
+        self.board_states.append(self.board.copy())
+        self.hand_states.append(self.player_hands.copy())
 
-        # Move cursor up and clear lines
+    def _is_oscillating_moves(self) -> bool:
+        """Check if players are making repetitive moves with no strategic progress."""
+        if len(self.game_history) < 6:
+            return False
+
+        blue_moves = []
+        orange_moves = []
+
+        for move_data in self.game_history[-8:]:
+            source, target, remove = move_data["move"].split()
+            if source not in ["h1", "h2"]:
+                if move_data["player"] == "blue":
+                    blue_moves.append((source, target, remove))
+                else:
+                    orange_moves.append((source, target, remove))
+
+        def check_oscillation(moves):
+            if len(moves) < 4:
+                return False
+
+            for i in range(len(moves) - 3):
+                move1, move2, move3, move4 = moves[i : i + 4]
+
+                basic_pattern = (
+                    move1[0] == move2[1]
+                    and move1[1] == move2[0]
+                    and move3[0] == move4[1]
+                    and move3[1] == move4[0]
+                )
+
+                repeating_pattern = (
+                    move1[0] == move3[0]
+                    and move1[1] == move3[1]
+                    and move2[0] == move4[0]
+                    and move2[1] == move4[1]
+                )
+
+                no_captures = all(
+                    move[2] == "r0" for move in [move1, move2, move3, move4]
+                )
+
+                if basic_pattern and repeating_pattern and no_captures:
+                    return True
+
+            return False
+
+        return check_oscillation(blue_moves) and check_oscillation(orange_moves)
+
+    def _show_state(self, move: Optional[str] = None) -> None:
+        """Display current game state if visualization is enabled."""
+        num_lines = 20
+
         if hasattr(self, "_previous_draw"):
-            click.echo("\033[J")  # Clear from cursor to end of screen
-            click.echo(f"\033[{num_lines}A")  # Move cursor up
+            click.echo("\033[J")
+            click.echo(f"\033[{num_lines}A")
+
         self._previous_draw = True
 
         if move:
@@ -360,9 +436,9 @@ class LaskerMorris(AbstractGame):
 
         current_color = self._current_player.get_color()
         color_code = Fore.BLUE if current_color == "blue" else Fore.YELLOW
-        click.echo(f"\n{color_code}{current_color}'s turn{Style.RESET_ALL}    ")
+        click.echo(f"\n{color_code}{current_color}'s turn{Style.RESET_ALL}")
 
-        # Show board
+        # Display board
         click.echo("\nBoard:")
         for num in range(1, 8):
             row = ""
@@ -378,59 +454,115 @@ class LaskerMorris(AbstractGame):
             click.echo(f"{num} {row}")
         click.echo("  a b c d e f g")
 
-        # Show hands
+        # Display stones in hand
         click.echo("\nStones in hand:")
-        click.echo(f"{Fore.BLUE}Blue: {self.player_hands['blue']}{Style.RESET_ALL} ")
+        click.echo(f"{Fore.BLUE}Blue: {self.player_hands['blue']}{Style.RESET_ALL}")
         click.echo(
-            f"{Fore.YELLOW}Orange: {self.player_hands['orange']}{Style.RESET_ALL} "
+            f"{Fore.YELLOW}Orange: {self.player_hands['orange']}{Style.RESET_ALL}"
         )
 
     def determine_winner(self) -> Optional[LaskerPlayer]:
-        """
-        Check win conditions.
-        Game ends if a player has fewer than 2 pieces total.
-        """
+        """Check win conditions and return winner if game is over."""
+        # Check for draw condition
+        if self._is_oscillating_moves():
+            self._is_game_over = True
+            message = "Draw!"
+            self._player1.write(message)
+            self._player2.write(message)
+            self._player1.stop()
+            self._player2.stop()
+            return None
+
+        # Check if any player has fewer than 3 pieces
         for player in [self._player1, self._player2]:
             color = player.get_color()
-            total_pieces = self._count_player_pieces(color)
-            if total_pieces < 3:
+            if self._count_player_pieces(color) < 3:
                 self._is_game_over = True
                 return self._player2 if player == self._player1 else self._player1
+
         return None
+
+    def _get_move_with_timeout(self) -> Optional[str]:
+        """Get a move from the current player with timeout.
+
+        Returns:
+            str: The move if received within timeout, None if timeout occurred
+        """
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            try:
+                future = executor.submit(self._current_player.read)
+                return future.result(timeout=self.move_timeout)
+            except TimeoutError:
+                winner_color = (
+                    self._player2.get_color()
+                    if self._current_player == self._player1
+                    else self._player1.get_color()
+                )
+                loser_color = self._current_player.get_color()
+                message = f"END: {winner_color} WINS! {loser_color} LOSES! Time out!"
+
+                self._player1.write(message)
+                self._player2.write(message)
+                click.echo(
+                    f"\n{Fore.RED}Move timeout: Player {self._current_player.get_color()} took too long to respond{Style.RESET_ALL}"
+                )
+
+                return None
 
     def run_game(self) -> Optional[LaskerPlayer]:
         """Main game loop."""
-
         while not self.is_game_over:
-            # Get current player's move
-            move = self.current_player.read()
-
-            # Validate and execute move
-            if not self.make_move(move):
+            # Get and validate current player's move
+            move = self._get_move_with_timeout()
+            if not move or not self.make_move(move):
                 self._is_game_over = True
-                # End player processes
+                winner_color = (
+                    self._player2.get_color()
+                    if self._current_player == self._player1
+                    else self._player1.get_color()
+                )
+                loser_color = self._current_player.get_color()
+                message = f"END: {winner_color} WINS! {loser_color} LOSES! Invalid move {move}!"
+
+                self._player1.write(message)
+                self._player2.write(message)
                 self._player1.stop()
                 self._player2.stop()
+
                 return (
                     self._player2
-                    if self.current_player == self._player1
+                    if self._current_player == self._player1
                     else self._player1
                 )
 
-            # Write move to other player
+            # Send move to other player
             other_player = (
-                self._player2 if self.current_player == self._player1 else self._player1
+                self._player2
+                if self._current_player == self._player1
+                else self._player1
             )
             other_player.write(move)
 
             # Check for winner
             winner = self.determine_winner()
             if winner:
+                winner_color = (
+                    self._player2.get_color()
+                    if self._current_player == self._player1
+                    else self._player1.get_color()
+                )
+                loser_color = self._current_player.get_color()
+                message = (
+                    f"END: {winner_color} WINS! {loser_color} LOSES! Ran out of pieces!"
+                )
+
+                self._player1.write(message)
+                self._player2.write(message)
+                self._player1.stop()
+                self._player2.stop()
+
                 return winner
 
-            # Switch turns
             self.switch_player()
-
-            time.sleep(2)  # Pauses for 2 seconds
 
         return None

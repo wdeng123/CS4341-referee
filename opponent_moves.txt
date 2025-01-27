@@ -1,66 +1,277 @@
-r0 r0 r0
-r0 r0 r0
-h d1 r0
-h d3 r0
-r0 r0 r0
-r0 r0 r0
-h d1 r0
-h d3 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-h d1 r0
-h d3 r0
-h d1 r0
-h d3 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-h d1 r0
-h d3 r0
-r0 r0 r0
-r0 r0 r0
-r0 r0 r0
-h d1 r0
-h d3 r0
-r0 r0 r0
-h d1 r0
-h d3 r0
-h d1 r0
-h d3 r0
-r0 r0 r0
-h d1 r0
-h d3 r0
-r0 r0 r0
-r0 r0 r0
-h d1 r0
-h d3 r0
-r0 r0 r0
-r0 r0 r0
-h d1 r0
-h d3 r0
-r0 r0 r0
-h d1 r0
-h d3 r0
-h d1 r0
-h d3 r0
-h d1 r0
-h d3 r0
-r0 r0 r0
-h d1 r0
-blue
-blue
-blue
-h d1 r0
-h d3 r0
+h1 d1 r0
+h1 d3 r0
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+d3 d2 r0
+d2 d3 r0
+d3 d2 r0
+END: orange WINS! blue LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+d3 d2 r0
+d2 d3 r0
+d3 d2 r0
+d2 d3 r0
+END: blue WINS! orange LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+d3 d2 r0
+d2 d3 r0
+d3 d2 r0
+d2 d3 r0
+d3 d2 r0
+d2 d3 r0
+END: blue WINS! orange LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+d3 d2 r0
+d2 d3 r0
+d3 d2 r0
+d2 d3 r0
+d3 d2 r0
+d2 d3 r0
+END: blue WINS! orange LOSES! Out-of-order move!
+h1 d1 r0
+h1 d3 r0
+d3 d2 r0
+d2 d3 r0
+d3 d2 r0
+d2 d3 r0
+END: DRAW! Game ended due to repetitive back-and-forth moves!
+h1 d1 r0
+h1 d3 r0
+d3 d2 r0
+d2 d3 r0
+d3 d2 r0
+d2 d3 r0
+Draw!
+h1 d1 r0
+h1 d3 r0
+d3 d2 r0
+d2 d3 r0
+d3 d2 r0
+d2 d3 r0
+Draw!
+h1 d1 r0
+END: orange WINS! blue LOSES! Invalid move h d3 r0!
+h1 d1 r0
+END: orange WINS! blue LOSES! Invalid move h d3 r0!
+h1 d1 r0
+END: orange WINS! blue LOSES! Invalid move h d3 r0!
+h1 d1 r0
+h1 d3 r0
+d3 d2 r0
+d2 d3 r0
+d3 d2 r0
+d2 d3 r0
+d3 d2 r0
+d2 d3 r0
+END: blue WINS! orange LOSES! Invalid move h 1a r0!

@@ -1,3 +1,4 @@
 from .lasker_morris import LaskerMorris
+from .tictactoe import TicTacToe
 
-__all__ = ["LaskerMorris"]
+__all__ = ["LaskerMorris", "TicTacToe"]
