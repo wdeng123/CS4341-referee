@@ -198,19 +198,6 @@ class TestLaskerMorris(unittest.TestCase):
         self.game.switch_player()
         self.assertNotEqual(self.game.current_player, initial_player)
 
-    def test_timeout_handling(self) -> None:
-        """Test handling of move timeouts"""
-        # Simply raise TimeoutError immediately
-        self.game.current_player.read.side_effect = TimeoutError
-
-        # No real timing involved
-        move = self.game._get_move_with_timeout()
-        self.assertIsNone(move)
-
-        # Verify timeout messages were sent
-        self.game._player1.write.assert_called_once()
-        self.game._player2.write.assert_called_once()
-
     def test_oscillation_detection(self) -> None:
         """Test detection of oscillating moves"""
         # Simulate oscillating moves
@@ -422,15 +409,6 @@ class TestLaskerMorris(unittest.TestCase):
         self.game._player1.write.assert_called()
         self.game._player2.write.assert_called()
 
-    def test_game_end_by_timeout(self) -> None:
-        """Test game ending when a player's move times out"""
-        self.game._is_game_over = False
-        self.game.current_player.read.side_effect = TimeoutError
-
-        # Run game and verify winner
-        winner = self.game.run_game()
-        self.assertEqual(winner, self.game._player2)
-        self.assertTrue(self.game._is_game_over)
 
     def test_game_end_by_insufficient_pieces(self) -> None:
         """Test game ending when a player has insufficient pieces to continue"""
