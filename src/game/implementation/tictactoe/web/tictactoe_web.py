@@ -9,6 +9,7 @@ class TicTacToeWeb(WebGame):
         self.game = game
         self.game_history = []
         self.board_states = []
+        self.end_message = None
 
     def get_game_state_json(self):
         """Return current game state as JSON"""
@@ -20,6 +21,7 @@ class TicTacToeWeb(WebGame):
                 "moves": self.game_history,
                 "boards": self.board_states,
             },
+            "endMessage": self.end_message if self.game.is_game_over else None,
         }
         return jsonify(game_data)
 
@@ -33,6 +35,7 @@ class TicTacToeWeb(WebGame):
                 "moves": self.game_history,
                 "boards": self.board_states,
             },
+            "endMessage": self.end_message if self.game.is_game_over else None,
         }
         return render_template("./tictactoe/index.html", game_data=game_data)
 

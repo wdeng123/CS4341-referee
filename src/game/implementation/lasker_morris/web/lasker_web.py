@@ -7,6 +7,7 @@ class LaskerMorrisWeb(WebGame):
     def __init__(self, game):
         super().__init__()
         self.game = game
+        self.end_message = None
 
     def get_game_state_json(self):
         game_data = {
@@ -20,6 +21,7 @@ class LaskerMorrisWeb(WebGame):
                 "boards": self.game.board_states,
                 "hands": self.game.hand_states,
             },
+            "endMessage": self.end_message if self.game.is_game_over else None,
         }
         return jsonify(game_data)
 
@@ -36,5 +38,6 @@ class LaskerMorrisWeb(WebGame):
                 "boards": self.game.board_states,
                 "hands": self.game.hand_states,
             },
+            "endMessage": self.end_message if self.game.is_game_over else None,
         }
         return render_template("./lasker_morris/index.html", game_data=game_data)

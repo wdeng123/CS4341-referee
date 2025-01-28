@@ -1,9 +1,11 @@
+import random
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from typing import Dict, List, Optional, Tuple
 
 import click
 from colorama import Fore, Style
 
+from ....config import Config, TicTacToeConfig
 from ...abstract import AbstractGame
 from .tictactoe_player import TicTacToePlayer
 from .web import TicTacToeWeb
@@ -22,11 +24,12 @@ class TicTacToe(AbstractGame):
         self,
         player1_command: str,
         player2_command: str,
-        visual: bool = True,
-        random_assignment: bool = True,
-        move_timeout: int = 5,
-        enable_logging: bool = False,
-        debug: bool = False,
+        visual: bool = TicTacToeConfig.DEFAULT_VIS,
+        random_assignment: bool = TicTacToeConfig.DEFAULT_RAND,
+        move_timeout: int = TicTacToeConfig.GAME_TIMEOUT,
+        enable_logging: bool = TicTacToeConfig.DEFAULT_LOG,
+        debug: bool = TicTacToeConfig.DEFAULT_DEBUG,
+        port: int = Config.DEFAULT_WEB_PORT,
     ):
         """
         Initialize game with player commands and game settings.
@@ -43,10 +46,16 @@ class TicTacToe(AbstractGame):
         self.move_timeout = move_timeout
         self.debug = debug
         self.enable_logging = enable_logging
+        self.port = port
+
+        # Initialize players with randomly assigned colors
+        colors = ["X", "O"]
+        if random_assignment:
+            random.shuffle(colors)
 
         # Create players with assigned symbols
-        player1 = TicTacToePlayer(player1_command, "X")
-        player2 = TicTacToePlayer(player2_command, "O")
+        player1 = TicTacToePlayer(player1_command, colors[0])
+        player2 = TicTacToePlayer(player2_command, colors[1])
 
         super().__init__(player1, player2)
 
@@ -67,7 +76,7 @@ class TicTacToe(AbstractGame):
         self._player2.start()
 
         if self.visual and self.web:
-            self.web.start_web_server()
+            self.web.start_web_server(self.port)
 
         # Ensure X player goes first
         self._current_player = self._player1 if self._player1.is_x() else self._player2
@@ -248,21 +257,29 @@ class TicTacToe(AbstractGame):
 
             if move is None:  # Timeout occurred
                 self._is_game_over = True
-                self._cleanup_game()
-                return (
+                winner = (
                     self._player2
                     if self.current_player == self._player1
                     else self._player1
                 )
+                message = f"END: {winner.get_symbol()} WINS! {self.current_player.get_symbol()} LOSES! Time out!"
+                if self.visual:
+                    self.web.end_message = message
+                self._cleanup_game()
+                return winner
 
             if not self.make_move(move):
                 self._is_game_over = True
-                self._cleanup_game()
-                return (
+                winner = (
                     self._player2
                     if self.current_player == self._player1
                     else self._player1
                 )
+                message = f"END: {winner.get_symbol()} WINS! {self.current_player.get_symbol()} LOSES! Invalid move {move}!"
+                if self.visual:
+                    self.web.end_message = message
+                self._cleanup_game()
+                return winner
 
             # Write move to other player
             other_player = (
@@ -272,9 +289,18 @@ class TicTacToe(AbstractGame):
 
             # Check for winner or draw
             winner = self.determine_winner()
-            if winner is not None or self._is_board_full():
+            if winner is not None:
+                message = f"END: {winner.get_symbol()} WINS! {other_player.get_symbol()} LOSES! Three in a row!"
+                if self.visual:
+                    self.web.end_message = message
                 self._cleanup_game()
                 return winner
+            elif self._is_board_full():
+                message = "Draw!"
+                if self.visual:
+                    self.web.end_message = message
+                self._cleanup_game()
+                return None
 
             self.switch_player()
 

@@ -5,12 +5,14 @@ from click import echo
 from flask import Flask
 from flask_cors import CORS
 
+from ....config import Config
+
 
 class WebGame(ABC):
     """Abstract base class for web-enabled games"""
 
     def __init__(self):
-        self.app = Flask(__name__, template_folder="../../../web/templates/")
+        self.app = Flask(__name__, template_folder=Config.WEB_TEMPLATE_FOLDER)
         CORS(self.app)
         self.game_history = []
         # Register routes
@@ -27,7 +29,7 @@ class WebGame(ABC):
         """Return game index.html"""
         pass
 
-    def start_web_server(self, port=8000):
+    def start_web_server(self, port=Config.DEFAULT_WEB_PORT):
         """Start production server using Waitress"""
         from waitress import serve
 

@@ -1,7 +1,7 @@
 import click
 from colorama import Fore, Style, init
 
-from ..config import LaskerConfig, TicTacToeConfig
+from ..config import Config, LaskerConfig, TicTacToeConfig
 from ..game import LaskerMorris, TicTacToe
 
 # Initialize colorama for Windows compatibility
@@ -35,6 +35,12 @@ init()
     help="Timeout in seconds for each player's move",
 )
 @click.option(
+    "--port",
+    type=int,
+    default=Config.DEFAULT_WEB_PORT,
+    help="Port the webserver for visualization gets hosted on",
+)
+@click.option(
     "--log/--no-log",
     "-l/-nl",
     default=LaskerConfig.DEFAULT_LOG,
@@ -52,13 +58,14 @@ def start_game(
     visual: bool,
     random_assignment: bool,
     timeout: int,
+    port: int,
     log: bool,
     debug: bool,
 ) -> None:
     """🎮 Start a new game of Lasker Morris!"""
     try:
         game = LaskerMorris(
-            player1, player2, visual, random_assignment, timeout, log, debug
+            player1, player2, visual, random_assignment, timeout, log, debug, port
         )
         winner = game.run_game()
 
@@ -70,14 +77,16 @@ def start_game(
         else:
             click.echo(f"\n{Fore.GREEN}Game over! Draw!{Style.RESET_ALL}")
 
-        # Keep webserver running for visual inspection
+        # Keep webserver running if visualization is enabled
         if visual:
             click.echo(
-                f"\n{Fore.YELLOW}Press <CTRL>+C to kill visualization!{Style.RESET_ALL}"
+                f"\n{Fore.YELLOW}Press <CTRL>+C to exit visualization{Style.RESET_ALL}"
             )
-        while True:
-            if not visual:
-                break
+            try:
+                while True:
+                    pass
+            except KeyboardInterrupt:
+                pass
 
     except Exception as e:
         click.echo(f"\n{Fore.RED}Error: {e}{Style.RESET_ALL}")
@@ -87,6 +96,9 @@ def start_game(
 @click.command(name="tictactoe")
 @click.option(
     "--player", "-p", prompt="Enter Player command", help="Command to run Player."
+)
+@click.option(
+    "--player2", "-p2", required=False, help="Command to run Player 2 (optional)."
 )
 @click.option(
     "--visual/--no-visual",
@@ -119,13 +131,21 @@ def start_game(
     default=TicTacToeConfig.DEFAULT_DEBUG,
     help="Enable/disable debug output",
 )
+@click.option(
+    "--port",
+    type=int,
+    default=Config.DEFAULT_WEB_PORT,
+    help="Port the webserver for visualization gets hosted on",
+)
 def start_tictactoe(
     player: str,
+    player2: str | None,
     visual: bool,
     random_assignment: bool,
     timeout: int,
     log: bool,
     debug: bool,
+    port: int,
 ) -> None:
     """🎮 Start a new game of TicTacToe!
 
@@ -133,15 +153,20 @@ def start_tictactoe(
     First player to get three in a row (horizontally, vertically, or diagonally) wins!
     """
     try:
+        # Check for optinal second player
+        if not player2:
+            player2 = player
+
         # Initialize game
         game = TicTacToe(
             player1_command=player,
-            player2_command=player,
+            player2_command=player2,
             visual=visual,
             random_assignment=random_assignment,
             move_timeout=timeout,
             enable_logging=log,
             debug=debug,
+            port=port,
         )
 
         # Run game and get winner

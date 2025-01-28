@@ -409,7 +409,6 @@ class TestLaskerMorris(unittest.TestCase):
         self.game._player1.write.assert_called()
         self.game._player2.write.assert_called()
 
-
     def test_game_end_by_insufficient_pieces(self) -> None:
         """Test game ending when a player has insufficient pieces to continue"""
         # Setup board state with insufficient pieces for orange

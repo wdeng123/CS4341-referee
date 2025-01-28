@@ -1,153 +1,161 @@
-# Lasker Morris Game Referee
+# Game Referee
 [![Build and Test](https://github.com/jake-molnia/cs4341-referee/actions/workflows/build.yml/badge.svg)](https://github.com/jake-molnia/cs4341-referee/actions/workflows/build.yml)
 [![codecov](https://codecov.io/gh/jake-molnia/cs4341-referee/branch/main/graph/badge.svg)](https://codecov.io/gh/{username}/cs4341-referee)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)
 
-A Python implementation of a referee for the Lasker Morris board game, designed for programming competitions and AI development.
+A modern game referee system developed for WPI's CS4341 - Introduction to Artificial Intelligence course, taught by Professor Ruiz in C Term 2025. This referee system powers both Tic-tac-toe and Lasker Morris competitions, providing a robust platform for AI development and testing.
 
-## Table of Contents
-- [Features](#features)
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Game Rules](#game-rules)
-- [Communication Protocol](#communication-protocol)
-- [Development](#development)
-- [Contributing](#contributing)
-- [License](#license)
+## 🚀 Quick Start
 
-## Features
-- 🎮 Complete Lasker Morris game implementation
-- 🤖 Process-based player communication
-- 🎯 Move validation and game state tracking
-- 📊 Visual game state representation
-- 🔄 Automatic turn management
-- ⏱️ Time limit enforcement
-- 🏆 Win condition detection
+### Prerequisites
 
-## Quick Start
+- Python 3.9 or higher
+- pip package manager
+- git
+
+### Installation
 
 ```bash
-# Install the referee
 pip install git+https://github.com/jake-molnia/cs4341-referee.git
-
-# Start a game between two players
-lasker-morris start -p1 "python3 player1.py" -p2 "python3 player2.py"
 ```
 
-## Installation
+## 🎮 Running Games
 
-### Using pip
+### Tic-tac-toe
+
 ```bash
-# Install latest version
-pip install git+https://github.com/jake-molnia/cs4341-referee.git
-
-# Install specific version
-pip install git+https://github.com/jake-molnia/cs4341-referee.git@v0.1.0
+cs4341-referee tictactoe -p "python player.py" --visual
 ```
 
-### From source
+### Lasker Morris
+
 ```bash
-git clone https://github.com/jake-molnia/cs4341-referee.git
-cd cs4341-referee
-pip install -e .
+cs4341-referee laskermorris -p1 "python player1.py" -p2 "python player2.py" --visual
 ```
 
-## Usage
+## 🛠️ Command Line Options
 
-### Command Line Interface
-```bash
-# Start a game with visualization
-lasker-morris start -p1 "python3 player1.py" -p2 "python3 player2.py" -v
+### Common Options
 
-# Start a game without visualization
-lasker-morris start -p1 "./player1" -p2 "./player2" --no-visual
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-v, --visual` | Enable web visualization | True |
+| `-r, --random-assignment` | Randomize player colors/symbols | True |
+| `-t, --timeout` | Move timeout in seconds | 5 |
+| `-l, --log` | Enable detailed logging | False |
+| `-d, --debug` | Enable debug output | False |
+| `--port` | Specify the port the game visualization is hosted on | 8000 |
 
-# Get help
-lasker-morris --help
-```
+_Note: logging is not yet supported_
 
-### Python API
-```python
-from lasker_morris import LaskerMorris
+### Game-Specific Options
 
-# Create game instance
-game = LaskerMorris("python3 player1.py", "python3 player2.py", visual=True)
+#### Tic-tac-toe
+- `-p, --player`: Command to run the player program
+- `-p2, --player2`: Optional command to run second player program (leave blank for self play)
 
-# Run the game
-winner = game.run_game()
+#### Lasker Morris
+- `-p1, --player1`: Command for first player
+- `-p2, --player2`: Command for second player
 
-# Check winner
-if winner:
-    print(f"Winner: {winner.get_color()}")
-else:
-    print("Game ended in a draw")
-```
+## 🤖 Player Communication Protocol
 
-## Game Rules
+Players communicate with the referee through standard input/output streams. Here's how it works:
 
-### Board Layout
-The game is played on a 7x7 grid with specific valid positions. The board looks like this:
-
-TODO: Insert picture of game
-
-### Basic Rules
-- Players start with 10 stones each
-- Blue player moves first
-- Stones can be placed from hand or moved on board
-- Moving to adjacent positions only (except with 3 pieces)
-- Forming 3-in-a-row (mill) allows capturing
-- Game ends when a player has fewer than 3 pieces
-
-## Communication Protocol
+### Game Start
+- First player receives: `"blue"` (Lasker Morris) or `"X"` (Tic-tac-toe)
+- Second player receives: `"orange"` (Lasker Morris) or `"O"` (Tic-tac-toe)
 
 ### Move Format
-Moves are formatted as "A B C" where:
-- A: Source position ('h1'/'h2' for hand, or board position)
-- B: Target position
-- C: Capture position ('r0' for no capture)
 
-Example: `h1 d1 r0` or `d1 d2 e3`
+#### Tic-tac-toe
+```
+<column><row>
+Example: "b2" (center position)
+```
 
-### Player Implementation Templates
+#### Lasker Morris
+```
+<source> <target> <remove>
+Example: "h1 d1 r0" (place piece from hand)
+Example: "d1 d2 e3" (move piece and capture)
+```
 
-#### Python
+### Python Player Template
 ```python
 import sys
 
 def main():
+    # Read initial color/symbol
+    player_id = input().strip()
+
     while True:
-        game_input = input().strip()
-        # Your move logic here
-        move = "h1 d1 r0"  # Example move
-        print(move, flush=True)
+        try:
+            # Read opponent's move or game start
+            game_input = input().strip()
+
+            # Your move logic here
+            move = "your_move_here"
+
+            # Send move to referee
+            print(move, flush=True)
+
+        except EOFError:
+            break
 
 if __name__ == "__main__":
     main()
 ```
 
-#### Java
-```java
-import java.util.Scanner;
+## 🎯 Game Rules
 
-public class Player {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
-            String input = scanner.nextLine();
-            // Your move logic here
-            String move = "h1 d1 r0";  // Example move
-            System.out.println(move);
-            System.out.flush();
-        }
-    }
-}
-```
+### Tic-tac-toe
+- 3x3 grid
+- Players alternate placing X's and O's
+- First to get three in a row wins
+- Game ends in draw if board fills without winner
 
-For more templates and details, see [Communication Protocol Documentation](docs/PROTOCOL.md)
+### Lasker Morris
+- Players start with 10 pieces each
+- Pieces can be placed from hand or moved on board
+- Moving to adjacent positions only (except when player has 3 pieces)
+- Forming three in a row (mill) allows capturing opponent's piece
+- Player loses when reduced to fewer than 3 pieces
+- Draw occurs if same position repeats 3 times
+
+## 🖥️ Web Visualization
+
+The referee includes a modern web interface that shows:
+- Real-time game state
+- Move history with navigation
+- Player information
+- Game status and results
+
+To use:
+1. Start game with `--visual` flag
+2. Open browser to displayed URL (typically `http://localhost:8000`)
+3. Watch game progress in real-time
+
+## 🔍 Error Handling
+
+The referee handles various game situations:
+
+- Invalid moves: Game ends, opponent wins
+- Timeout violations: Player loses turn
+- Communication errors: Game ends, opponent wins
+- Protocol violations: Game ends, opponent wins
+
+## 👥 Contributing
+
+Contributions are welcome! Please feel free to submit issues and pull requests.
 
 
-## License
+## 🙏 Acknowledgments
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- Professor Ruiz - CS4341 Introduction to AI
+- Contributing students and faculty
+
+---
+
+*This referee system is part of the CS4341 course at WPI. For course-specific questions, please contact the teaching team.*

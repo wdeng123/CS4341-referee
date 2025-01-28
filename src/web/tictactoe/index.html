@@ -54,6 +54,7 @@
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             width: 400px;
             height: 400px;
+            position: relative;
         }
         .board-svg .cell {
             fill: none;
@@ -92,6 +93,61 @@
                 aspect-ratio: 1;
             }
         }
+        .player-x {
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .player-o {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+        .game-over-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            cursor: pointer;
+        }
+
+        .game-over-modal {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 80%;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            cursor: default;
+        }
+
+        .game-over-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .winner-text {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .reason-text {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+        }
+        header p.author {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
     </style>
 </head>
 <body>
@@ -99,6 +155,7 @@
         <header>
             <h1>Tic-tac-toe</h1>
             <p class="subtitle">A classic game of X's and O's</p>
+            <p class="author">Part of the CS4341 Referee Implementation at WPI in C Term 2025</p>
         </header>
         <div class="game-container">
             <div class="board">
@@ -114,7 +171,7 @@
 
             <div class="controls">
                 <div class="status" id="currentPlayer">
-                    Current Player: <span id="player">X</span>
+                    Current Player: <span id="player"></span>
                 </div>
                 <div class="status" id="moveInfo">Last Move: None</div>
                 <button class="button" id="prevMove">← Previous</button>
@@ -123,10 +180,18 @@
             </div>
         </div>
     </div>
+    <div class="game-over-overlay" id="gameOverOverlay">
+        <div class="game-over-modal">
+            <h2 class="game-over-title">Game Over</h2>
+            <p class="winner-text" id="winnerText"></p>
+            <p class="reason-text" id="reasonText"></p>
+        </div>
+    </div>
 
     <script>
         let gameState = {{ game_data|tojson|safe }};
-        let currentMoveIndex = 0;
+        let currentMoveIndex = gameState.history.moves.length - 1;
+        let hasShownGameOver = false;
 
         const coordMap = {
             'a1': {x: 50, y: 50}, 'b1': {x: 150, y: 50}, 'c1': {x: 250, y: 50},
@@ -185,12 +250,45 @@
                 const board = gameState.history.boards[index];
                 const move = gameState.history.moves[index];
 
+                const currentPlayer = index % 2 === 0 ? 'O' : 'X';
+
                 updateBoard(board);
-                document.getElementById('player').textContent = gameState.currentPlayer;
+                const playerSpan = document.getElementById('player');
+                playerSpan.textContent = currentPlayer;
+                playerSpan.className = currentPlayer.toLowerCase() === 'x' ? 'player-x' : 'player-o';
                 document.getElementById('moveInfo').textContent = `Last Move: ${move?.move || 'None'}`;
                 document.getElementById('moveCount').textContent =
                     `Move: ${index + 1} / ${gameState.history.moves.length}`;
                 currentMoveIndex = index;
+
+                // Check for game over
+                if (gameState.isGameOver &&
+                    ((gameState.history.moves.length - 1) == index) &&
+                    !hasShownGameOver) {
+                    const overlay = document.getElementById('gameOverOverlay');
+                    const winnerText = document.getElementById('winnerText');
+                    const reasonText = document.getElementById('reasonText');
+
+                    const endResult = parseGameEndMessage(gameState.endMessage);
+                    if (endResult) {
+                        if (endResult.winner === null) {
+                            winnerText.textContent = "Game ended in a Draw!";
+                            reasonText.textContent = endResult.reason;
+                        } else {
+                            winnerText.textContent = `Player ${endResult.winner} Wins!`;
+                            const reason = endResult.reason.toLowerCase();
+                            if (reason.includes("time")) {
+                                reasonText.textContent = `Player ${endResult.loser} exceeded the move time limit`;
+                            } else if (reason.includes("invalid")) {
+                                reasonText.textContent = `Player ${endResult.loser} made an invalid move`;
+                            } else if (reason.includes("three")) {
+                                reasonText.textContent = "Three in a row!";
+                            }
+                        }
+                        overlay.style.display = 'flex';
+                        hasShownGameOver = true;
+                    }
+                }
             }
         }
 
@@ -205,6 +303,41 @@
                 updateState(currentMoveIndex + 1);
             }
         });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const overlay = document.getElementById('gameOverOverlay');
+            const modal = document.querySelector('.game-over-modal');
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.style.display = 'none';
+                }
+            });
+
+            modal.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        });
+
+        function parseGameEndMessage(message) {
+            if (message === "Draw!") {
+                return {
+                    winner: null,
+                    reason: "The game ended in a draw"
+                };
+            }
+
+            const match = message.match(/END: (\w+) WINS! (\w+) LOSES! (.+)!/);
+            if (match) {
+                return {
+                    winner: match[1],
+                    loser: match[2],
+                    reason: match[3]
+                };
+            }
+
+            return null;
+        }
 
         async function fetchGameState() {
             try {
