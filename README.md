@@ -25,13 +25,13 @@ pip install git+https://github.com/jake-molnia/cs4341-referee.git
 ### Tic-tac-toe
 
 ```bash
-cs4341-referee tictactoe -p "python player.py" --visual
+cs4341-referee tictactoe -p "python <your_own_player>.py" --visual
 ```
 
 ### Lasker Morris
 
 ```bash
-cs4341-referee laskermorris -p1 "python player1.py" -p2 "python player2.py" --visual
+cs4341-referee laskermorris -p1 "python <your_own_player>.py" -p2 "python <your_own_player>.py" --visual
 ```
 
 ## 🛠️ Command Line Options
@@ -127,6 +127,19 @@ if __name__ == "__main__":
 ## 🖥️ Web Visualization
 
 The referee includes a modern web interface that shows:
+
+<div align="center">
+  <img src="docs/images/tictactoe-viz.png" alt="Tic-tac-toe Visualization" width="600"/>
+  <p><em>Tic-tac-toe game visualization showing move history and game state</em></p>
+</div>
+
+<div align="center">
+  <img src="docs/images/laskermorris-viz.png" alt="Lasker Morris Visualization" width="600"/>
+  <p><em>Lasker Morris game in progress with piece placement and capture visualization</em></p>
+</div>
+
+
+### Features:
 - Real-time game state
 - Move history with navigation
 - Player information

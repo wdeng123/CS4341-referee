@@ -10,6 +10,9 @@
             --secondary: #475569;
             --background: #f8fafc;
             --board: #f1f5f9;
+            --x-color: #2563eb;
+            --o-color: #f59e0b;
+            --neutral: #64748b;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -41,6 +44,11 @@
             margin-bottom: 0.5rem;
             font-weight: 500;
         }
+        header p.author {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
         .game-container {
             display: flex;
             gap: 2rem;
@@ -61,8 +69,8 @@
             stroke: #475569;
             stroke-width: 2;
         }
-        .x-piece { stroke: #2563eb; stroke-width: 3; }
-        .o-piece { stroke: #f59e0b; stroke-width: 3; fill: none; }
+        .x-piece { stroke: var(--x-color); stroke-width: 3; }
+        .o-piece { stroke: var(--o-color); stroke-width: 3; fill: none; }
         .controls {
             background: white;
             padding: 2rem;
@@ -75,16 +83,58 @@
             padding: 1rem;
             background: var(--board);
             border-radius: 0.5rem;
+            font-weight: 500;
+        }
+        .hands {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .hand-info {
+            padding: 1rem;
+            background: var(--board);
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: 500;
+        }
+        .hand-info.x {
+            color: var(--x-color);
+        }
+        .hand-info.o {
+            color: var(--o-color);
+        }
+        .button-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
         }
         .button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
+            padding: 0.75rem 1rem;
             border-radius: 0.5rem;
             cursor: pointer;
-            width: 100%;
-            margin-bottom: 1rem;
+            border: none;
+            color: white;
+            font-weight: 500;
+            transition: opacity 0.2s;
+            background: var(--neutral);
+        }
+        .button:hover {
+            opacity: 0.9;
+        }
+        .move-count {
+            text-align: center;
+            color: var(--secondary);
+            font-weight: 500;
+        }
+        .player-x {
+            color: var(--x-color);
+            font-weight: 600;
+        }
+        .player-o {
+            color: var(--o-color);
+            font-weight: 600;
         }
         @media (max-width: 768px) {
             .board {
@@ -92,14 +142,6 @@
                 height: auto;
                 aspect-ratio: 1;
             }
-        }
-        .player-x {
-            color: #2563eb;
-            font-weight: 600;
-        }
-        .player-o {
-            color: #f59e0b;
-            font-weight: 600;
         }
         .game-over-overlay {
             display: none;
@@ -114,7 +156,6 @@
             z-index: 1000;
             cursor: pointer;
         }
-
         .game-over-modal {
             background: white;
             padding: 1.5rem;
@@ -124,7 +165,6 @@
             box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
             cursor: default;
         }
-
         .game-over-title {
             font-size: 2rem;
             margin-bottom: 1rem;
@@ -132,21 +172,14 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
         .winner-text {
             font-size: 1.25rem;
             margin-bottom: 1rem;
             font-weight: 600;
         }
-
         .reason-text {
             color: #64748b;
             margin-bottom: 1.5rem;
-        }
-        header p.author {
-            font-size: 0.875rem;
-            color: #94a3b8;
-            margin-bottom: 2rem;
         }
     </style>
 </head>
@@ -173,10 +206,22 @@
                 <div class="status" id="currentPlayer">
                     Current Player: <span id="player"></span>
                 </div>
-                <div class="status" id="moveInfo">Last Move: None</div>
-                <button class="button" id="prevMove">← Previous</button>
-                <button class="button" id="nextMove">Next →</button>
-                <div id="moveCount">Move: 0 / 0</div>
+                <div class="hands">
+                    <div class="hand-info x">
+                        X Pieces: <span id="xHand">0</span>
+                    </div>
+                    <div class="hand-info o">
+                        O Pieces: <span id="oHand">0</span>
+                    </div>
+                </div>
+                <div class="status" id="moveInfo">
+                    Last Move: <span id="lastMove">None</span>
+                </div>
+                <div class="button-container">
+                    <button class="button prev" id="prevMove">← Previous</button>
+                    <button class="button next" id="nextMove">Next →</button>
+                </div>
+                <div class="move-count" id="moveCount">Move: 0 / 0</div>
             </div>
         </div>
     </div>
@@ -251,12 +296,28 @@
                 const move = gameState.history.moves[index];
 
                 const currentPlayer = index % 2 === 0 ? 'O' : 'X';
+                const lastMovePlayer = index % 2 === 0 ? 'X' : 'O';
 
                 updateBoard(board);
                 const playerSpan = document.getElementById('player');
                 playerSpan.textContent = currentPlayer;
-                playerSpan.className = currentPlayer.toLowerCase() === 'x' ? 'player-x' : 'player-o';
-                document.getElementById('moveInfo').textContent = `Last Move: ${move?.move || 'None'}`;
+                playerSpan.className = `player-${currentPlayer.toLowerCase()}`;
+
+                // Update piece counts (simulated for tic-tac-toe)
+                const xCount = Object.values(board).filter(v => v === 'X').length;
+                const oCount = Object.values(board).filter(v => v === 'O').length;
+                document.getElementById('xHand').textContent = 5 - xCount;
+                document.getElementById('oHand').textContent = 5 - oCount;
+
+                const lastMoveSpan = document.getElementById('lastMove');
+                if (move?.move) {
+                    lastMoveSpan.textContent = move.move;
+                    lastMoveSpan.className = `player-${lastMovePlayer.toLowerCase()}`;
+                } else {
+                    lastMoveSpan.textContent = 'None';
+                    lastMoveSpan.className = '';
+                }
+
                 document.getElementById('moveCount').textContent =
                     `Move: ${index + 1} / ${gameState.history.moves.length}`;
                 currentMoveIndex = index;
@@ -292,6 +353,26 @@
             }
         }
 
+        function parseGameEndMessage(message) {
+            if (message === "Draw!") {
+                return {
+                    winner: null,
+                    reason: "The game ended in a draw"
+                };
+            }
+
+            const match = message.match(/END: (\w+) WINS! (\w+) LOSES! (.+)!/);
+            if (match) {
+                return {
+                    winner: match[1],
+                    loser: match[2],
+                    reason: match[3]
+                };
+            }
+
+            return null;
+        }
+
         document.getElementById('prevMove').addEventListener('click', () => {
             if (currentMoveIndex > 0) {
                 updateState(currentMoveIndex - 1);
@@ -318,26 +399,6 @@
                 e.stopPropagation();
             });
         });
-
-        function parseGameEndMessage(message) {
-            if (message === "Draw!") {
-                return {
-                    winner: null,
-                    reason: "The game ended in a draw"
-                };
-            }
-
-            const match = message.match(/END: (\w+) WINS! (\w+) LOSES! (.+)!/);
-            if (match) {
-                return {
-                    winner: match[1],
-                    loser: match[2],
-                    reason: match[3]
-                };
-            }
-
-            return null;
-        }
 
         async function fetchGameState() {
             try {

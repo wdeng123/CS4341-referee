@@ -10,6 +10,8 @@
             --secondary: #475569;
             --background: #f8fafc;
             --board: #f1f5f9;
+            --orange: #f59e0b;
+            --neutral: #64748b;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -124,35 +126,62 @@
             padding: 1rem;
             background: var(--board);
             border-radius: 0.5rem;
+            font-weight: 500;
         }
         .hands {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .hand-info {
+            padding: 1rem;
+            background: var(--board);
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: 500;
+        }
+        .hand-info.blue {
+            color: var(--primary);
+        }
+        .hand-info.orange {
+            color: var(--orange);
+        }
+        .button-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
             margin-bottom: 1rem;
         }
         .button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
+            padding: 0.75rem 1rem;
             border-radius: 0.5rem;
             cursor: pointer;
-            width: 100%;
-            margin-bottom: 1rem;
+            border: none;
+            color: white;
+            font-weight: 500;
+            transition: opacity 0.2s;
         }
-        @media (max-width: 768px) {
-            .board {
-                width: 100%;
-                height: auto;
-                aspect-ratio: 1;
-            }
+        .button:hover {
+            opacity: 0.9;
+        }
+        .button.prev {
+            background: var(--neutral);
+        }
+        .button.next {
+            background: var(--neutral);
+        }
+        .move-count {
+            text-align: center;
+            color: var(--secondary);
+            font-weight: 500;
         }
         .player-blue {
-            color: #2563eb;
+            color: var(--primary);
             font-weight: 600;
         }
         .player-orange {
-            color: #f59e0b;
+            color: var(--orange);
             font-weight: 600;
         }
         .game-over-overlay {
@@ -225,16 +254,25 @@
                     Current Player: <span id="player"></span>
                 </div>
                 <div class="hands">
-                    <div>Blue: <span id="blueHand">0</span></div>
-                    <div>Orange: <span id="orangeHand">0</span></div>
+                    <div class="hand-info blue">
+                        Blue Pieces: <span id="blueHand">0</span>
+                    </div>
+                    <div class="hand-info orange">
+                        Orange Pieces: <span id="orangeHand">0</span>
+                    </div>
                 </div>
-                <div class="status" id="moveInfo">Last Move: None</div>
-                <button class="button" id="prevMove">← Previous</button>
-                <button class="button" id="nextMove">Next →</button>
-                <div id="moveCount">Move: 0 / 0</div>
+                <div class="status" id="moveInfo">
+                    Last Move: <span id="lastMove">None</span>
+                </div>
+                <div class="button-container">
+                    <button class="button prev" id="prevMove">← Previous</button>
+                    <button class="button next" id="nextMove">Next →</button>
+                </div>
+                <div class="move-count" id="moveCount">Move: 0 / 0</div>
             </div>
         </div>
     </div>
+
     <div class="game-over-overlay" id="gameOverOverlay">
         <div class="game-over-modal">
             <h2 class="game-over-title">Game Over</h2>
@@ -304,14 +342,25 @@
 
                 // Determine the current player based on move index
                 const currentPlayer = index % 2 === 0 ? 'Orange' : 'Blue';
+                const lastMovePlayer = index % 2 === 0 ? 'Blue' : 'Orange';
 
                 updateBoard(board);
                 const playerSpan = document.getElementById('player');
                 playerSpan.textContent = currentPlayer;
-                playerSpan.className = currentPlayer.toLowerCase() === 'blue' ? 'player-blue' : 'player-orange';
+                playerSpan.className = `player-${currentPlayer.toLowerCase()}`;
+
                 document.getElementById('blueHand').textContent = hands.blue;
                 document.getElementById('orangeHand').textContent = hands.orange;
-                document.getElementById('moveInfo').textContent = `Last Move: ${move?.move || 'None'}`.trim();
+
+                const lastMoveSpan = document.getElementById('lastMove');
+                if (move?.move) {
+                    lastMoveSpan.textContent = move.move;
+                    lastMoveSpan.className = `player-${lastMovePlayer.toLowerCase()}`;
+                } else {
+                    lastMoveSpan.textContent = 'None';
+                    lastMoveSpan.className = '';
+                }
+
                 document.getElementById('moveCount').textContent =
                     `Move: ${index + 1} / ${gameState.history.moves.length}`;
                 currentMoveIndex = index;

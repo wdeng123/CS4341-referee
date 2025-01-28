@@ -23,7 +23,7 @@ This guide will help you verify and set up pip, Python's package installer, whic
    ```bash
    python -m ensurepip --upgrade
    ```
-   
+
 ### macOS/Linux
 ```bash
 python3 -m ensurepip --upgrade

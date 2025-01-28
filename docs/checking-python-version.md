@@ -76,7 +76,7 @@ If you have multiple Python versions installed:
    ```bash
    # Create a virtual environment with specific Python version
    python3.10 -m venv myenv
-   
+
    # Activate it
    source myenv/bin/activate  # On Unix/macOS
    myenv\Scripts\activate     # On Windows
