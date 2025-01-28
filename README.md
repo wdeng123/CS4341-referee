@@ -2,7 +2,7 @@
 [![Build and Test](https://github.com/jake-molnia/cs4341-referee/actions/workflows/build.yml/badge.svg)](https://github.com/jake-molnia/cs4341-referee/actions/workflows/build.yml)
 [![codecov](https://codecov.io/gh/jake-molnia/cs4341-referee/branch/main/graph/badge.svg)](https://codecov.io/gh/{username}/cs4341-referee)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)(https://www.python.org/downloads/)
 
 A modern game referee system developed for WPI's CS4341 - Introduction to Artificial Intelligence course, taught by Professor Ruiz in C Term 2025. This referee system powers both Tic-tac-toe and Lasker Morris competitions, providing a robust platform for AI development and testing.
 
