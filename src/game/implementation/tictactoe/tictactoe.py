@@ -81,6 +81,10 @@ class TicTacToe(AbstractGame):
         # Ensure X player goes first
         self._current_player = self._player1 if self._player1.is_x() else self._player2
         self._current_player.write("X")
+        other_player = (
+            self._player2 if self._current_player == self._player1 else self._player1
+        )
+        other_player.write("O")
 
     def _validate_move_format(self, move: str) -> Tuple[bool, Optional[str]]:
         """

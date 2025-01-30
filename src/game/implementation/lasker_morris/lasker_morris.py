@@ -111,6 +111,10 @@ class LaskerMorris(AbstractGame):
             self._player1 if self._player1.is_blue() else self._player2
         )
         self._current_player.write("blue")
+        other_player = (
+            self._player2 if self._current_player == self._player1 else self._player1
+        )
+        other_player.write("orange")
 
     def make_move(self, move: str) -> bool:
         """Execute a player's move if valid.
