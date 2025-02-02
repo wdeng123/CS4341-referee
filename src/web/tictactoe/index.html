@@ -128,11 +128,11 @@
             color: var(--secondary);
             font-weight: 500;
         }
-        .player-x {
+        .player-blue {
             color: var(--x-color);
             font-weight: 600;
         }
-        .player-o {
+        .player-orange {
             color: var(--o-color);
             font-weight: 600;
         }
@@ -208,10 +208,10 @@
                 </div>
                 <div class="hands">
                     <div class="hand-info x">
-                        X Pieces: <span id="xHand">0</span>
+                        blue Pieces: <span id="xHand">0</span>
                     </div>
                     <div class="hand-info o">
-                        O Pieces: <span id="oHand">0</span>
+                        orange Pieces: <span id="oHand">0</span>
                     </div>
                 </div>
                 <div class="status" id="moveInfo">
@@ -283,7 +283,7 @@
                 if (!symbol) return;
 
                 const coords = coordMap[pos];
-                const piece = symbol === 'X' ?
+                const piece = symbol === 'BLUE' ?
                     createXPiece(coords.x, coords.y) :
                     createOPiece(coords.x, coords.y);
                 piecesGroup.appendChild(piece);
@@ -295,8 +295,8 @@
                 const board = gameState.history.boards[index];
                 const move = gameState.history.moves[index];
 
-                const currentPlayer = index % 2 === 0 ? 'O' : 'X';
-                const lastMovePlayer = index % 2 === 0 ? 'X' : 'O';
+                const currentPlayer = index % 2 === 0 ? 'ORANGE' : 'BLUE';
+                const lastMovePlayer = index % 2 === 0 ? 'BLUE' : 'ORANGE';
 
                 updateBoard(board);
                 const playerSpan = document.getElementById('player');
@@ -304,8 +304,8 @@
                 playerSpan.className = `player-${currentPlayer.toLowerCase()}`;
 
                 // Update piece counts (simulated for tic-tac-toe)
-                const xCount = Object.values(board).filter(v => v === 'X').length;
-                const oCount = Object.values(board).filter(v => v === 'O').length;
+                const xCount = Object.values(board).filter(v => v === 'BLUE').length;
+                const oCount = Object.values(board).filter(v => v === 'ORANGE').length;
                 document.getElementById('xHand').textContent = 5 - xCount;
                 document.getElementById('oHand').textContent = 5 - oCount;
 
@@ -336,12 +336,12 @@
                             winnerText.textContent = "Game ended in a Draw!";
                             reasonText.textContent = endResult.reason;
                         } else {
-                            winnerText.textContent = `Player ${endResult.winner} Wins!`;
+                            winnerText.textContent = `Player ${endResult.winner.toLowerCase()} Wins!`;
                             const reason = endResult.reason.toLowerCase();
                             if (reason.includes("time")) {
-                                reasonText.textContent = `Player ${endResult.loser} exceeded the move time limit`;
+                                reasonText.textContent = `Player ${endResult.loser.toLowerCase()} exceeded the move time limit`;
                             } else if (reason.includes("invalid")) {
-                                reasonText.textContent = `Player ${endResult.loser} made an invalid move`;
+                                reasonText.textContent = `Player ${endResult.loser.toLowerCase()} made an invalid move`;
                             } else if (reason.includes("three")) {
                                 reasonText.textContent = "Three in a row!";
                             }
