@@ -6,8 +6,8 @@ from ...abstract import AbstractPlayer
 class PlayerSymbol(Enum):
     """Enum for valid player symbols."""
 
-    X = "X"
-    O = "O"
+    X = "BLUE"
+    O = "ORANGE"
 
 
 class TicTacToePlayer(AbstractPlayer):
@@ -37,7 +37,9 @@ class TicTacToePlayer(AbstractPlayer):
         try:
             self.symbol = PlayerSymbol(symbol.upper())
         except ValueError:
-            raise ValueError(f"Invalid symbol: {symbol}. Must be either 'X' or 'O'")
+            raise ValueError(
+                f"Invalid symbol: {symbol}. Must be either 'blue' or 'orange'"
+            )
 
     def get_symbol(self) -> str:
         """Return the player's symbol as a string."""

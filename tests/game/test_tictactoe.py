@@ -20,8 +20,8 @@ class TestTicTacToe(unittest.TestCase):
         # Mock the players after initialization
         self.game._player1 = Mock()
         self.game._player2 = Mock()
-        self.game._player1.get_symbol.return_value = "X"
-        self.game._player2.get_symbol.return_value = "O"
+        self.game._player1.get_symbol.return_value = "blue"
+        self.game._player2.get_symbol.return_value = "orange"
         self.game._player1.is_x.return_value = True
         self.game._player2.is_x.return_value = False
         self.game._current_player = self.game._player1
@@ -30,7 +30,7 @@ class TestTicTacToe(unittest.TestCase):
     def test_initialization(self):
         """Test game initialization"""
         self.assertEqual(len(self.game.board), 9)  # 3x3 board
-        self.assertEqual(self.game.current_player.get_symbol(), "X")
+        self.assertEqual(self.game.current_player.get_symbol(), "blue")
         self.assertTrue(all(value is None for value in self.game.board.values()))
         self.assertEqual(len(self.game.move_history), 0)
 
@@ -67,7 +67,7 @@ class TestTicTacToe(unittest.TestCase):
         """Test making valid and invalid moves"""
         # Test valid move
         self.assertTrue(self.game.make_move("a1"))
-        self.assertEqual(self.game.board["a1"], "X")
+        self.assertEqual(self.game.board["a1"], "blue")
         self.assertEqual(len(self.game.move_history), 1)
 
         # Test occupied position
@@ -101,7 +101,7 @@ class TestTicTacToe(unittest.TestCase):
         for win in horizontal_wins:
             self.game.board = {pos: None for pos in self.game.board}
             for pos in win:
-                self.game.board[pos] = "X"
+                self.game.board[pos] = "blue"
             winner = self.game.determine_winner()
             self.assertEqual(winner, self.game._player1)
 
@@ -112,7 +112,7 @@ class TestTicTacToe(unittest.TestCase):
         for win in vertical_wins:
             self.game.board = {pos: None for pos in self.game.board}
             for pos in win:
-                self.game.board[pos] = "X"
+                self.game.board[pos] = "blue"
             winner = self.game.determine_winner()
             self.assertEqual(winner, self.game._player1)
 
@@ -123,7 +123,7 @@ class TestTicTacToe(unittest.TestCase):
         for win in diagonal_wins:
             self.game.board = {pos: None for pos in self.game.board}
             for pos in win:
-                self.game.board[pos] = "O"
+                self.game.board[pos] = "orange"
             winner = self.game.determine_winner()
             self.assertEqual(winner, self.game._player2)
 
@@ -131,15 +131,15 @@ class TestTicTacToe(unittest.TestCase):
         """Test draw condition when board is full"""
         # Fill board without winning combination
         positions = [
-            ("a1", "X"),
-            ("a2", "O"),
-            ("a3", "O"),
-            ("b1", "O"),
-            ("b2", "X"),
-            ("b3", "X"),
-            ("c1", "X"),
-            ("c2", "O"),
-            ("c3", "O"),
+            ("a1", "blue"),
+            ("a2", "orange"),
+            ("a3", "orange"),
+            ("b1", "orange"),
+            ("b2", "blue"),
+            ("b3", "blue"),
+            ("c1", "blue"),
+            ("c2", "orange"),
+            ("c3", "orange"),
         ]
         for pos, symbol in positions:
             self.game.board[pos] = symbol
