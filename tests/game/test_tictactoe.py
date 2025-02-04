@@ -144,8 +144,8 @@ class TestTicTacToe(unittest.TestCase):
         for pos, symbol in positions:
             self.game.board[pos] = symbol
 
-        winner = self.game.determine_winner()
-        self.assertIsNone(winner)
+        winner = self.game._is_board_full()
+        self.assertTrue(winner)
         self.assertTrue(self.game.is_game_over)
 
     # Game Flow Tests

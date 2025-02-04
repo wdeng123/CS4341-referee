@@ -20,7 +20,7 @@ class TicTacToePlayer(AbstractPlayer):
         command: Shell command to execute player program
     """
 
-    def __init__(self, command: str, symbol: str):
+    def __init__(self, command: str, symbol: str, log: bool = False):
         """
         Initialize player with command and symbol.
 
@@ -31,7 +31,7 @@ class TicTacToePlayer(AbstractPlayer):
         Raises:
             ValueError: If symbol is not "X" or "O"
         """
-        super().__init__(command)
+        super().__init__(command, log)
 
         # Validate and set the symbol
         try:

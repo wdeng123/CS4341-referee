@@ -300,7 +300,7 @@
 
                 updateBoard(board);
                 const playerSpan = document.getElementById('player');
-                playerSpan.textContent = currentPlayer;
+                playerSpan.textContent = currentPlayer.toLocaleLowerCase();
                 playerSpan.className = `player-${currentPlayer.toLowerCase()}`;
 
                 // Update piece counts (simulated for tic-tac-toe)

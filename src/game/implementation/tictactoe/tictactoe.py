@@ -54,8 +54,8 @@ class TicTacToe(AbstractGame):
             random.shuffle(colors)
 
         # Create players with assigned symbols
-        player1 = TicTacToePlayer(player1_command, colors[0])
-        player2 = TicTacToePlayer(player2_command, colors[1])
+        player1 = TicTacToePlayer(player1_command, colors[0], self.enable_logging)
+        player2 = TicTacToePlayer(player2_command, colors[1], self.enable_logging)
 
         super().__init__(player1, player2)
 
@@ -212,7 +212,11 @@ class TicTacToe(AbstractGame):
 
     def _is_board_full(self) -> bool:
         """Check if the board is completely filled."""
-        return all(value is not None for value in self.board.values())
+
+        if all(value is not None for value in self.board.values()):
+            self._is_game_over = True
+            return True
+        return False
 
     def determine_winner(self) -> Optional[TicTacToePlayer]:
         """
@@ -229,10 +233,6 @@ class TicTacToe(AbstractGame):
                 if self._player1.get_symbol() == winning_symbol
                 else self._player2
             )
-
-        if self._is_board_full():
-            self._is_game_over = True
-            return None
 
         return None
 
@@ -290,7 +290,6 @@ class TicTacToe(AbstractGame):
                 self._player2 if self.current_player == self._player1 else self._player1
             )
             other_player.write(move)
-
             # Check for winner or draw
             winner = self.determine_winner()
             if winner is not None:
