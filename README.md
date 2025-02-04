@@ -47,7 +47,6 @@ cs4341-referee laskermorris -p1 "python <your_own_player>.py" -p2 "python <your_
 | `-d, --debug` | Enable debug output | False |
 | `--port` | Specify the port the game visualization is hosted on | 8000 |
 
-_Note: logging is not yet supported_
 
 ### Game-Specific Options
 
