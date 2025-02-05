@@ -1,5 +1,5 @@
 """
-TicTacToe AI player implementation using minimax algorithm.
+TicTacToe AI player implementation using minimax algorithm with alpha-beta pruning.
 """
 
 import sys
@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Tuple
 
 class TicTacToeAI:
     """
-    AI player for Tic-tac-toe using minimax algorithm.
+    AI player for Tic-tac-toe using minimax algorithm with alpha-beta pruning.
     """
     def __init__(self, color: str):
         """
@@ -78,13 +78,15 @@ class TicTacToeAI:
             return -100
         return 0
 
-    def minimax(self, depth: int, is_maximizing: bool) -> Tuple[int, Optional[str]]:
+    def minimax(self, depth: int, is_maximizing: bool, alpha: float = float('-inf'), beta: float = float('inf')) -> Tuple[int, Optional[str]]:
         """
-        Minimax algorithm implementation.
+        Minimax algorithm implementation with alpha-beta pruning.
         
         Args:
             depth: Current depth in game tree
             is_maximizing: True if maximizing player's turn
+            alpha: Best value that maximizer can guarantee at current level or above
+            beta: Best value that minimizer can guarantee at current level or above
         
         Returns:
             Tuple of (best score, best move)
@@ -104,12 +106,16 @@ class TicTacToeAI:
             
             for move in valid_moves:
                 self.make_move(move, self.color)
-                score, _ = self.minimax(depth + 1, False)
+                score, _ = self.minimax(depth + 1, False, alpha, beta)
                 self.undo_move(move)
                 
                 if score > best_score:
                     best_score = score
                     best_move = move
+                
+                alpha = max(alpha, best_score)
+                if beta <= alpha:
+                    break  # Beta cut-off
                     
             return best_score, best_move
         else:
@@ -118,17 +124,21 @@ class TicTacToeAI:
             
             for move in valid_moves:
                 self.make_move(move, self.opponent_color)
-                score, _ = self.minimax(depth + 1, True)
+                score, _ = self.minimax(depth + 1, True, alpha, beta)
                 self.undo_move(move)
                 
                 if score < best_score:
                     best_score = score
                     best_move = move
+                
+                beta = min(beta, best_score)
+                if beta <= alpha:
+                    break  # Alpha cut-off
                     
             return best_score, best_move
 
     def get_best_move(self) -> str:
-        """Get best move using minimax algorithm."""
+        """Get best move using minimax algorithm with alpha-beta pruning."""
         _, best_move = self.minimax(0, True)
         return best_move if best_move else self.get_valid_moves()[0]
 
