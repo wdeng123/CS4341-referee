@@ -458,11 +458,9 @@ class LaskerMorris(AbstractGame):
 
         # Display stones in hand
         click.echo("\nStones in hand:")
-        click.echo(f"{Fore.BLUE}Blue: {
-                   self.player_hands['blue']}{Style.RESET_ALL}")
+        click.echo(f"{Fore.BLUE}Blue: {self.player_hands['blue']}{Style.RESET_ALL}")
         click.echo(
-            f"{Fore.YELLOW}Orange: {
-                self.player_hands['orange']}{Style.RESET_ALL}"
+            f"{Fore.YELLOW}Orange: {self.player_hands['orange']}{Style.RESET_ALL}"
         )
         click.echo("-------------------------------------------------")
 
@@ -506,15 +504,13 @@ class LaskerMorris(AbstractGame):
                     else self._player1.get_color()
                 )
                 loser_color = self._current_player.get_color()
-                message = f"END: {winner_color} WINS! {
-                    loser_color} LOSES! Time out!"
+                message = f"END: {winner_color} WINS! {loser_color} LOSES! Time out!"
                 if self.visual:
                     self.web.end_message = message
                 self._player1.write(message)
                 self._player2.write(message)
                 click.echo(
-                    f"\n{Fore.RED}Move timeout: Player {
-                        self._current_player.get_color()} took too long to respond{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Move timeout: Player {self._current_player.get_color()} took too long to respond{Style.RESET_ALL}"
                 )
 
                 return None
@@ -532,8 +528,7 @@ class LaskerMorris(AbstractGame):
                     else self._player1.get_color()
                 )
                 loser_color = self._current_player.get_color()
-                message = f"END: {winner_color} WINS! {
-                    loser_color} LOSES! Invalid move {move}!"
+                message = f"END: {winner_color} WINS! {loser_color} LOSES! Invalid move {move}!"
                 if self.visual:
                     self.web.end_message = message
                 self._player1.write(message)
@@ -565,8 +560,7 @@ class LaskerMorris(AbstractGame):
                 )
                 loser_color = self._current_player.get_color()
                 message = (
-                    f"END: {winner_color} WINS! {
-                        loser_color} LOSES! Ran out of pieces!"
+                    f"END: {winner_color} WINS! {loser_color} LOSES! Ran out of pieces!"
                 )
                 if self.visual:
                     self.web.end_message = message
