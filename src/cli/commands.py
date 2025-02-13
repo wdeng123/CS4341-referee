@@ -184,12 +184,10 @@ def start_tictactoe(
         if winner:
             color_code = Fore.BLUE if winner.get_symbol() == "X" else Fore.YELLOW
             click.echo(
-                f"\n{color_code}Game over! Winner: Player {
-                    winner.get_symbol()}{Style.RESET_ALL}"
+                f"\n{color_code}Game over! Winner: Player {winner.get_symbol()}{Style.RESET_ALL}"
             )
         else:
-            click.echo(f"\n{Fore.GREEN}Game over! It's a draw!{
-                       Style.RESET_ALL}")
+            click.echo(f"\n{Fore.GREEN}Game over! It's a draw!{Style.RESET_ALL}")
 
         # Keep webserver running if visualization is enabled
         if visual:

@@ -1,6 +1,6 @@
 [project]
 name = "cs4341-referee"
-version = "1.0.7"
+version = "1.0.8"
 description = "A referee program designed for a Artificial Integence class taught at WPI"
 authors = [{ name = "Jacob Molnia", email = "jrmolnia@wpi.edu" }]
 requires-python = ">=3.10,<4.0"
