@@ -54,8 +54,10 @@ class TicTacToe(AbstractGame):
             random.shuffle(colors)
 
         # Create players with assigned symbols
-        player1 = TicTacToePlayer(player1_command, colors[0], self.enable_logging)
-        player2 = TicTacToePlayer(player2_command, colors[1], self.enable_logging)
+        player1 = TicTacToePlayer(
+            player1_command, colors[0], self.enable_logging)
+        player2 = TicTacToePlayer(
+            player2_command, colors[1], self.enable_logging)
 
         super().__init__(player1, player2)
 
@@ -106,13 +108,15 @@ class TicTacToe(AbstractGame):
         if col not in self.VALID_COLUMNS:
             return (
                 False,
-                f"Invalid column: {col}. Must be one of: {', '.join(sorted(self.VALID_COLUMNS))}",
+                f"Invalid column: {col}. Must be one of: {
+                    ', '.join(sorted(self.VALID_COLUMNS))}",
             )
 
         if row not in self.VALID_ROWS:
             return (
                 False,
-                f"Invalid row: {row}. Must be one of: {', '.join(sorted(self.VALID_ROWS))}",
+                f"Invalid row: {row}. Must be one of: {
+                    ', '.join(sorted(self.VALID_ROWS))}",
             )
 
         return True, None
@@ -149,7 +153,8 @@ class TicTacToe(AbstractGame):
             return True
 
         except Exception as e:
-            click.echo(f"\n{Fore.RED}Error processing move: {str(e)}{Style.RESET_ALL}")
+            click.echo(f"\n{Fore.RED}Error processing move: {
+                       str(e)}{Style.RESET_ALL}")
             return False
 
     def _is_valid_move(self, position: str) -> bool:
@@ -164,13 +169,15 @@ class TicTacToe(AbstractGame):
         """
         if position not in self.board:
             click.echo(
-                f"\n{Fore.RED}Invalid move: Position {position} does not exist on the board{Style.RESET_ALL}"
+                f"\n{Fore.RED}Invalid move: Position {
+                    position} does not exist on the board{Style.RESET_ALL}"
             )
             return False
 
         if self.board[position] is not None:
             click.echo(
-                f"\n{Fore.RED}Invalid move: Position {position} is already occupied{Style.RESET_ALL}"
+                f"\n{Fore.RED}Invalid move: Position {
+                    position} is already occupied{Style.RESET_ALL}"
             )
             return False
 
@@ -249,7 +256,8 @@ class TicTacToe(AbstractGame):
                 return future.result(timeout=self.move_timeout)
             except TimeoutError:
                 click.echo(
-                    f"\n{Fore.RED}Move timeout: Player {self.current_player.get_symbol()} "
+                    f"\n{Fore.RED}Move timeout: Player {
+                        self.current_player.get_symbol()} "
                     f"took too long to respond{Style.RESET_ALL}"
                 )
                 return None
@@ -266,7 +274,8 @@ class TicTacToe(AbstractGame):
                     if self.current_player == self._player1
                     else self._player1
                 )
-                message = f"END: {winner.get_symbol()} WINS! {self.current_player.get_symbol()} LOSES! Time out!"
+                message = f"END: {winner.get_symbol()} WINS! {
+                    self.current_player.get_symbol()} LOSES! Time out!"
                 if self.visual:
                     self.web.end_message = message
                 self._cleanup_game()
@@ -279,7 +288,8 @@ class TicTacToe(AbstractGame):
                     if self.current_player == self._player1
                     else self._player1
                 )
-                message = f"END: {winner.get_symbol()} WINS! {self.current_player.get_symbol()} LOSES! Invalid move {move}!"
+                message = f"END: {winner.get_symbol()} WINS! {
+                    self.current_player.get_symbol()} LOSES! Invalid move {move}!"
                 if self.visual:
                     self.web.end_message = message
                 self._cleanup_game()
@@ -293,7 +303,8 @@ class TicTacToe(AbstractGame):
             # Check for winner or draw
             winner = self.determine_winner()
             if winner is not None:
-                message = f"END: {winner.get_symbol()} WINS! {other_player.get_symbol()} LOSES! Three in a row!"
+                message = f"END: {winner.get_symbol()} WINS! {
+                    other_player.get_symbol()} LOSES! Three in a row!"
                 if self.visual:
                     self.web.end_message = message
                 self._cleanup_game()

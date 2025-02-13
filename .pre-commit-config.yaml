@@ -13,13 +13,6 @@ repos:
       - id: debug-statements  # Check for debugger imports and py37+ breakpoint() calls
       - id: check-merge-conflict  # Check for files with merge conflict strings
 
-  - repo: https://github.com/psf/black
-    rev: 23.12.1
-    hooks:
-      - id: black
-        language_version: python3
-        args: [--line-length=88]
-
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
@@ -45,7 +38,7 @@ repos:
     hooks:
       - id: pytest
         name: pytest
-        entry: poetry run pytest
+        entry: uv run pytest
         language: system
         pass_filenames: false
         always_run: true
@@ -54,7 +47,7 @@ repos:
 
       - id: pytest-cov
         name: pytest coverage
-        entry: poetry run pytest --cov=CS4341-referee --cov-fail-under=60
+        entry: uv run pytest --cov=CS4341-referee --cov-fail-under=60
         language: system
         pass_filenames: false
         always_run: true

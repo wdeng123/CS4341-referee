@@ -65,14 +65,22 @@ def start_game(
     """🎮 Start a new game of Lasker Morris!"""
     try:
         game = LaskerMorris(
-            player1, player2, visual, random_assignment, timeout, log, debug, port
+            player1_command=player1,
+            player2_command=player2,
+            visual=visual,
+            select_rand=random_assignment,
+            timeout=timeout,
+            debug=debug,
+            logging=log,
+            port=port,
         )
         winner = game.run_game()
 
         if winner:
             color_code = Fore.BLUE if winner.get_color() == "blue" else Fore.YELLOW
             click.echo(
-                f"\n{color_code}Game over! Winner: {winner.get_color()}{Style.RESET_ALL}"
+                f"\n{color_code}Game over! Winner: {
+                    winner.get_color()}{Style.RESET_ALL}"
             )
         else:
             click.echo(f"\n{Fore.GREEN}Game over! Draw!{Style.RESET_ALL}")
@@ -176,10 +184,12 @@ def start_tictactoe(
         if winner:
             color_code = Fore.BLUE if winner.get_symbol() == "X" else Fore.YELLOW
             click.echo(
-                f"\n{color_code}Game over! Winner: Player {winner.get_symbol()}{Style.RESET_ALL}"
+                f"\n{color_code}Game over! Winner: Player {
+                    winner.get_symbol()}{Style.RESET_ALL}"
             )
         else:
-            click.echo(f"\n{Fore.GREEN}Game over! It's a draw!{Style.RESET_ALL}")
+            click.echo(f"\n{Fore.GREEN}Game over! It's a draw!{
+                       Style.RESET_ALL}")
 
         # Keep webserver running if visualization is enabled
         if visual:

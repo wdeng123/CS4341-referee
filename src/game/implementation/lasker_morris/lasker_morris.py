@@ -24,6 +24,7 @@ class LaskerMorris(AbstractGame):
         debug: bool = LaskerConfig.DEFAULT_DEBUG,
         logging: bool = LaskerConfig.DEFAULT_LOG,
         port: int = Config.DEFAULT_WEB_PORT,
+        print_board: bool = LaskerConfig.PRINT_BOARD
     ):
         """Initialize game with player commands and game settings.
 
@@ -42,14 +43,15 @@ class LaskerMorris(AbstractGame):
         self.hand_states = []
         self.debug = debug
         self.port = port
+        self.prin_board = print_board
 
         # Initialize players with randomly assigned colors
         colors = ["blue", "orange"]
         if select_rand:
             random.shuffle(colors)
 
-        player1 = LaskerPlayer(player1_command, colors[0])
-        player2 = LaskerPlayer(player2_command, colors[1])
+        player1 = LaskerPlayer(player1_command, colors[0], logging, debug)
+        player2 = LaskerPlayer(player2_command, colors[1], logging, debug)
         super().__init__(player1, player2)
 
         # Initialize game state
@@ -139,7 +141,7 @@ class LaskerMorris(AbstractGame):
 
             self._execute_move(source, target, remove)
 
-            if self.debug:
+            if self.prin_board:
                 self._show_state(move)
 
             return True
@@ -160,38 +162,43 @@ class LaskerMorris(AbstractGame):
         # Validate target position
         if target in self.invalid_fields or target not in self.board:
             click.echo(
-                f"\n{Fore.RED}Invalid move: Target position {target} does not exist on the board{Style.RESET_ALL}"
+                f"\n{Fore.RED}Invalid move: Target position {
+                    target} does not exist on the board{Style.RESET_ALL}"
             )
             return False
 
         if self.board[target] is not None:
             click.echo(
-                f"\n{Fore.RED}Invalid move: Target position {target} is already occupied{Style.RESET_ALL}"
+                f"\n{Fore.RED}Invalid move: Target position {
+                    target} is already occupied{Style.RESET_ALL}"
             )
             return False
 
         # Validate source position
         if source in ["h1", "h2"]:
             # Validate hand moves
-            is_player1 = self._current_player == self._player1
+            is_player1 = self._current_player.get_color() == "blue"
             correct_hand = "h1" if is_player1 else "h2"
 
             if source != correct_hand:
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: Player tried to use opponent's hand ({source}){Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid move: Player tried to use opponent's hand ({source}){
+                        Style.RESET_ALL}"
                 )
                 return False
 
             if self.player_hands[self._current_player.get_color()] <= 0:
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: {self._current_player.get_color()} player has no stones left in hand{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid move: {self._current_player.get_color(
+                    )} player has no stones left in hand{Style.RESET_ALL}"
                 )
                 return False
         else:
             # Validate board moves
             if source in self.invalid_fields or source not in self.board:
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: Source position {source} does not exist on the board{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid move: Source position {
+                        source} does not exist on the board{Style.RESET_ALL}"
                 )
                 return False
 
@@ -209,7 +216,8 @@ class LaskerMorris(AbstractGame):
                 if not self._check_corret_step(source, target):
                     click.echo(
                         f"\n{Fore.RED}"
-                        f"Invalid move: Cannot move from {source} to {target} - "
+                        f"Invalid move: Cannot move from {
+                            source} to {target} - "
                         f"must move to adjacent position when you have more than 3 pieces"
                         f"{Style.RESET_ALL}"
                     )
@@ -219,13 +227,15 @@ class LaskerMorris(AbstractGame):
         if remove != "r0":
             if remove in self.invalid_fields or remove not in self.board:
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: Cannot remove stone - position {remove} does not exist on the board{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid move: Cannot remove stone - position {
+                        remove} does not exist on the board{Style.RESET_ALL}"
                 )
                 return False
 
             if self.board[remove] is None:
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: Cannot remove stone - position {remove} is empty{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid move: Cannot remove stone - position {
+                        remove} is empty{Style.RESET_ALL}"
                 )
                 return False
 
@@ -240,12 +250,14 @@ class LaskerMorris(AbstractGame):
 
             if not self._is_mill(source, target):
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: Cannot remove opponent's stone - move does not form a mill{Style.RESET_ALL}"
+                    f"\n{
+                        Fore.RED}Invalid move: Cannot remove opponent's stone - move does not form a mill{Style.RESET_ALL}"
                 )
                 return False
         elif self._is_mill(source, target):
             click.echo(
-                f"\n{Fore.RED}Invalid move: Must remove an opponent's stone after forming a mill{Style.RESET_ALL}"
+                f"\n{Fore.RED}Invalid move: Must remove an opponent's stone after forming a mill{
+                    Style.RESET_ALL}"
             )
             return False
 
@@ -400,7 +412,7 @@ class LaskerMorris(AbstractGame):
                 return False
 
             for i in range(len(moves) - 3):
-                move1, move2, move3, move4 = moves[i : i + 4]
+                move1, move2, move3, move4 = moves[i: i + 4]
 
                 basic_pattern = (
                     move1[0] == move2[1]
@@ -429,20 +441,14 @@ class LaskerMorris(AbstractGame):
 
     def _show_state(self, move: Optional[str] = None) -> None:
         """Display current game state if visualization is enabled."""
-        num_lines = 20
 
-        if hasattr(self, "_previous_draw"):
-            click.echo("\033[J")
-            click.echo(f"\033[{num_lines}A")
-
-        self._previous_draw = True
-
+        click.echo("-------------------------------------------------")
         if move:
-            click.echo(f"\nMove: {move}")
+            click.echo(f"Move: {move}")
 
         current_color = self._current_player.get_color()
         color_code = Fore.BLUE if current_color == "blue" else Fore.YELLOW
-        click.echo(f"\n{color_code}{current_color}'s turn{Style.RESET_ALL}")
+        click.echo(f"{color_code}{current_color}'s turn{Style.RESET_ALL}")
 
         # Display board
         click.echo("\nBoard:")
@@ -462,10 +468,13 @@ class LaskerMorris(AbstractGame):
 
         # Display stones in hand
         click.echo("\nStones in hand:")
-        click.echo(f"{Fore.BLUE}Blue: {self.player_hands['blue']}{Style.RESET_ALL}")
+        click.echo(f"{Fore.BLUE}Blue: {
+                   self.player_hands['blue']}{Style.RESET_ALL}")
         click.echo(
-            f"{Fore.YELLOW}Orange: {self.player_hands['orange']}{Style.RESET_ALL}"
+            f"{Fore.YELLOW}Orange: {
+                self.player_hands['orange']}{Style.RESET_ALL}"
         )
+        click.echo("-------------------------------------------------")
 
     def determine_winner(self) -> Optional[LaskerPlayer]:
         """Check win conditions and return winner if game is over."""
@@ -507,13 +516,15 @@ class LaskerMorris(AbstractGame):
                     else self._player1.get_color()
                 )
                 loser_color = self._current_player.get_color()
-                message = f"END: {winner_color} WINS! {loser_color} LOSES! Time out!"
+                message = f"END: {winner_color} WINS! {
+                    loser_color} LOSES! Time out!"
                 if self.visual:
                     self.web.end_message = message
                 self._player1.write(message)
                 self._player2.write(message)
                 click.echo(
-                    f"\n{Fore.RED}Move timeout: Player {self._current_player.get_color()} took too long to respond{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Move timeout: Player {
+                        self._current_player.get_color()} took too long to respond{Style.RESET_ALL}"
                 )
 
                 return None
@@ -531,7 +542,8 @@ class LaskerMorris(AbstractGame):
                     else self._player1.get_color()
                 )
                 loser_color = self._current_player.get_color()
-                message = f"END: {winner_color} WINS! {loser_color} LOSES! Invalid move {move}!"
+                message = f"END: {winner_color} WINS! {
+                    loser_color} LOSES! Invalid move {move}!"
                 if self.visual:
                     self.web.end_message = message
                 self._player1.write(message)
@@ -563,7 +575,8 @@ class LaskerMorris(AbstractGame):
                 )
                 loser_color = self._current_player.get_color()
                 message = (
-                    f"END: {winner_color} WINS! {loser_color} LOSES! Ran out of pieces!"
+                    f"END: {winner_color} WINS! {
+                        loser_color} LOSES! Ran out of pieces!"
                 )
                 if self.visual:
                     self.web.end_message = message

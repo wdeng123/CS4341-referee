@@ -1,39 +1,47 @@
-[tool.poetry]
+[project]
 name = "cs4341-referee"
-version = "1.0.6"
+version = "1.0.7"
 description = "A referee program designed for a Artificial Integence class taught at WPI"
-authors = ["Jacob Molnia <jrmolnia@wpi.edu>"]
-license = "MIT"
+authors = [{ name = "Jacob Molnia", email = "jrmolnia@wpi.edu" }]
+requires-python = ">=3.10,<4.0"
 readme = "README.md"
-packages = [
-    { include = "src", from = "." }
+license = "MIT"
+dependencies = [
+    "pywin32>=307 ; sys_platform == 'win32'",
+    "click>=8.1.8,<9",
+    "colorama>=0.4.6,<0.5",
+    "toml>=0.10.2,<0.11",
+    "flask>=3.1.0,<4",
+    "flask-cors>=5.0.0,<6",
+    "waitress>=3.0.2,<4",
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<4.0"
-pywin32 = { version = ">=307", markers = "sys_platform == 'win32'" }
-click = "^8.1.8"
-colorama = "^0.4.6"
-toml = "^0.10.2"
-flask = "^3.1.0"
-flask-cors = "^5.0.0"
-waitress = "^3.0.2"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.0"
-pytest-cov = "^4.0"
-black = "^23.0"
-isort = "^5.0"
-mypy = "^1.0"
-pre-commit = "^3.0"
-pytest-mock = "^3.14.0"
-
-[tool.poetry.scripts]
+[project.scripts]
 cs4341-referee = "src.main:main"
 
+[dependency-groups]
+dev = [
+    "pytest~=7.0",
+    "pytest-cov~=4.0",
+    "black~=23.0",
+    "isort~=5.0",
+    "mypy~=1.0",
+    "pre-commit~=3.0",
+    "pytest-mock>=3.14.0,<4",
+]
+
+[tool.hatch.build.targets.sdist]
+include = ["src"]
+
+[tool.hatch.build.targets.wheel]
+include = ["src"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = "src"
+
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
