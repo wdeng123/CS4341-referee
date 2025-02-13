@@ -71,4 +71,33 @@ jobs:
           compression-level: 9
           retention-days: 5
   create_release:
-    # This part remains the same since it doesn't involve Poetry/uv specific commands
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download all built packages
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: 'dist--'
+          merge-multiple: true
+      - name: Get version from pyproject.toml
+        id: get_version
+        run: |
+          VERSION=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: Release v${{ steps.get_version.outputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/*
+          generate_release_notes: true
