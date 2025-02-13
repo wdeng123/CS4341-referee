@@ -1,17 +1,11 @@
-Our move: ('h', 'f4', 'r0') and color blue
-Our move: h1 f4 r0 and color blue
-TEST RANDOM blue game input: h2 b4 r0
-TEST RANDOM blue game input: h2 b6 r0
-TEST RANDOM blue game input: END: blue WINS! orange LOSES! Invalid move h2 b2 f6!
-Our move: ('h', 'd1', 'r0') and color blue
-Our move: h1 d1 r0 and color blue
-TEST RANDOM orange game input: h1 d1 r0
-TEST RANDOM blue game input: h2 b4 r0
-TEST RANDOM orange game input: h1 f4 r0
-TEST RANDOM blue game input: h2 g1 r0
-TEST RANDOM orange game input: h1 d7 r0
-TEST RANDOM blue game input: h2 a1 r0
-TEST RANDOM orange game input: h1 d3 r0
-TEST RANDOM blue game input: b4 b6 r0
-TEST RANDOM blue game input: END: orange WINS! blue LOSES! Invalid move d3 d5 r0!
+TEST RANDOM orange game input: h1 d2 r0
+TEST RANDOM orange game input: h1 b4 r0
+TEST RANDOM orange game input: h1 b2 r0
+TEST RANDOM orange game input: h1 f2 e4
+TEST RANDOM orange game input: f2 f4 r0
+TEST RANDOM orange game input: h1 d6 r0
+TEST RANDOM orange game input: h1 f2 f6
+TEST RANDOM orange game input: d2 d3 r0
+TEST RANDOM orange game input: h1 d2 d1
+TEST RANDOM orange game input: h1 d1 g4
 TEST RANDOM orange game input: END: orange WINS! blue LOSES! Invalid move d3 d5 r0!
