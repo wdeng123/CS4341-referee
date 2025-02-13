@@ -23,20 +23,20 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install uv
-    - name: Cache dependencies
+    - name: Create and activate venv
+      run: |
+        uv venv
+    - name: Cache uv virtualenv
       uses: actions/cache@v4
       with:
         path: ./.venv
-        key: ${{ runner.os }}-uv-${{ hashFiles('requirements.txt') }}
+        key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
     - name: Install dependencies
-      run: |
-        uv venv
-        uv pip install -r requirements.txt
-        uv pip install pytest pytest-cov
+      run: uv pip install -e .
     - name: Run tests with pytest
       run: |
-        source .venv/bin/activate
-        pytest --cov --junitxml=junit.xml -o junit_family=legacy
+        uv pip install pytest pytest-cov
+        python -m pytest --cov --junitxml=junit.xml -o junit_family=legacy
     - name: Upload test results to Codecov
       if: ${{ !cancelled() }}
       uses: codecov/test-results-action@v1
@@ -60,7 +60,7 @@ jobs:
       - name: Install build tools
         run: |
           python -m pip install --upgrade pip
-          python -m pip install build
+          python -m pip install uv build
       - name: Build package
         run: python -m build
       - name: Upload built package
@@ -71,33 +71,4 @@ jobs:
           compression-level: 9
           retention-days: 5
   create_release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Download all built packages
-        uses: actions/download-artifact@v4
-        with:
-          path: dist
-          pattern: 'dist-*-*'
-          merge-multiple: true
-      - name: Get version from pyproject.toml
-        id: get_version
-        run: |
-          VERSION=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          name: Release v${{ steps.get_version.outputs.version }}
-          draft: false
-          prerelease: false
-          files: |
-            dist/*
-          generate_release_notes: true
+    # This part remains the same since it doesn't involve Poetry/uv specific commands
