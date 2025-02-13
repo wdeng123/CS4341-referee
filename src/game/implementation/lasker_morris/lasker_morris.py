@@ -273,7 +273,7 @@ class LaskerMorris(AbstractGame):
         Returns:
             bool: True if move forms a mill
         """
-        color = self._current_player.color
+        color = self._current_player.get_color()
 
         mills = [
             # Horizontal mills
