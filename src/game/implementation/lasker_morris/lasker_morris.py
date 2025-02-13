@@ -162,15 +162,13 @@ class LaskerMorris(AbstractGame):
         # Validate target position
         if target in self.invalid_fields or target not in self.board:
             click.echo(
-                f"\n{Fore.RED}Invalid move: Target position {
-                    target} does not exist on the board{Style.RESET_ALL}"
+                f"\n{Fore.RED}Invalid move: Target position {target} does not exist on the board{Style.RESET_ALL}"
             )
             return False
 
         if self.board[target] is not None:
             click.echo(
-                f"\n{Fore.RED}Invalid move: Target position {
-                    target} is already occupied{Style.RESET_ALL}"
+                f"\n{Fore.RED}Invalid move: Target position {target} is already occupied{Style.RESET_ALL}"
             )
             return False
 
@@ -182,23 +180,20 @@ class LaskerMorris(AbstractGame):
 
             if source != correct_hand:
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: Player tried to use opponent's hand ({source}){
-                        Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid move: Player tried to use opponent's hand ({source}){Style.RESET_ALL}"
                 )
                 return False
 
             if self.player_hands[self._current_player.get_color()] <= 0:
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: {self._current_player.get_color(
-                    )} player has no stones left in hand{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid move: {self._current_player.get_color()} player has no stones left in hand{Style.RESET_ALL}"
                 )
                 return False
         else:
             # Validate board moves
             if source in self.invalid_fields or source not in self.board:
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: Source position {
-                        source} does not exist on the board{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid move: Source position {source} does not exist on the board{Style.RESET_ALL}"
                 )
                 return False
 
@@ -216,8 +211,7 @@ class LaskerMorris(AbstractGame):
                 if not self._check_corret_step(source, target):
                     click.echo(
                         f"\n{Fore.RED}"
-                        f"Invalid move: Cannot move from {
-                            source} to {target} - "
+                        f"Invalid move: Cannot move from {source} to {target} - "
                         f"must move to adjacent position when you have more than 3 pieces"
                         f"{Style.RESET_ALL}"
                     )
@@ -227,15 +221,13 @@ class LaskerMorris(AbstractGame):
         if remove != "r0":
             if remove in self.invalid_fields or remove not in self.board:
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: Cannot remove stone - position {
-                        remove} does not exist on the board{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid move: Cannot remove stone - position {remove} does not exist on the board{Style.RESET_ALL}"
                 )
                 return False
 
             if self.board[remove] is None:
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: Cannot remove stone - position {
-                        remove} is empty{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid move: Cannot remove stone - position {remove} is empty{Style.RESET_ALL}"
                 )
                 return False
 
@@ -250,14 +242,12 @@ class LaskerMorris(AbstractGame):
 
             if not self._is_mill(source, target):
                 click.echo(
-                    f"\n{
-                        Fore.RED}Invalid move: Cannot remove opponent's stone - move does not form a mill{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid move: Cannot remove opponent's stone - move does not form a mill{Style.RESET_ALL}"
                 )
                 return False
         elif self._is_mill(source, target):
             click.echo(
-                f"\n{Fore.RED}Invalid move: Must remove an opponent's stone after forming a mill{
-                    Style.RESET_ALL}"
+                f"\n{Fore.RED}Invalid move: Must remove an opponent's stone after forming a mill{Style.RESET_ALL}"
             )
             return False
 
