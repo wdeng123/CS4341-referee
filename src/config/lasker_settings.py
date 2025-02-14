@@ -6,3 +6,4 @@ class LaskerConfig:
     DEFAULT_VIS = True
     DEFAULT_DEBUG = False
     DEFAULT_LOG = False
+    PRINT_BOARD = False

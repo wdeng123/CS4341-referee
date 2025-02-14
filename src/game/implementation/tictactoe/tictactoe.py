@@ -54,8 +54,10 @@ class TicTacToe(AbstractGame):
             random.shuffle(colors)
 
         # Create players with assigned symbols
-        player1 = TicTacToePlayer(player1_command, colors[0], self.enable_logging)
-        player2 = TicTacToePlayer(player2_command, colors[1], self.enable_logging)
+        player1 = TicTacToePlayer(
+            player1_command, colors[0], self.enable_logging)
+        player2 = TicTacToePlayer(
+            player2_command, colors[1], self.enable_logging)
 
         super().__init__(player1, player2)
 

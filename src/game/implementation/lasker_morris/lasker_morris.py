@@ -24,6 +24,7 @@ class LaskerMorris(AbstractGame):
         debug: bool = LaskerConfig.DEFAULT_DEBUG,
         logging: bool = LaskerConfig.DEFAULT_LOG,
         port: int = Config.DEFAULT_WEB_PORT,
+        print_board: bool = LaskerConfig.PRINT_BOARD
     ):
         """Initialize game with player commands and game settings.
 
@@ -42,14 +43,15 @@ class LaskerMorris(AbstractGame):
         self.hand_states = []
         self.debug = debug
         self.port = port
+        self.prin_board = print_board
 
         # Initialize players with randomly assigned colors
         colors = ["blue", "orange"]
         if select_rand:
             random.shuffle(colors)
 
-        player1 = LaskerPlayer(player1_command, colors[0])
-        player2 = LaskerPlayer(player2_command, colors[1])
+        player1 = LaskerPlayer(player1_command, colors[0], logging, debug)
+        player2 = LaskerPlayer(player2_command, colors[1], logging, debug)
         super().__init__(player1, player2)
 
         # Initialize game state
@@ -139,7 +141,7 @@ class LaskerMorris(AbstractGame):
 
             self._execute_move(source, target, remove)
 
-            if self.debug:
+            if self.prin_board:
                 self._show_state(move)
 
             return True
@@ -173,7 +175,7 @@ class LaskerMorris(AbstractGame):
         # Validate source position
         if source in ["h1", "h2"]:
             # Validate hand moves
-            is_player1 = self._current_player == self._player1
+            is_player1 = self._current_player.get_color() == "blue"
             correct_hand = "h1" if is_player1 else "h2"
 
             if source != correct_hand:
@@ -261,7 +263,7 @@ class LaskerMorris(AbstractGame):
         Returns:
             bool: True if move forms a mill
         """
-        color = self._current_player.color
+        color = self._current_player.get_color()
 
         mills = [
             # Horizontal mills
@@ -400,7 +402,7 @@ class LaskerMorris(AbstractGame):
                 return False
 
             for i in range(len(moves) - 3):
-                move1, move2, move3, move4 = moves[i : i + 4]
+                move1, move2, move3, move4 = moves[i: i + 4]
 
                 basic_pattern = (
                     move1[0] == move2[1]
@@ -429,20 +431,14 @@ class LaskerMorris(AbstractGame):
 
     def _show_state(self, move: Optional[str] = None) -> None:
         """Display current game state if visualization is enabled."""
-        num_lines = 20
 
-        if hasattr(self, "_previous_draw"):
-            click.echo("\033[J")
-            click.echo(f"\033[{num_lines}A")
-
-        self._previous_draw = True
-
+        click.echo("-------------------------------------------------")
         if move:
-            click.echo(f"\nMove: {move}")
+            click.echo(f"Move: {move}")
 
         current_color = self._current_player.get_color()
         color_code = Fore.BLUE if current_color == "blue" else Fore.YELLOW
-        click.echo(f"\n{color_code}{current_color}'s turn{Style.RESET_ALL}")
+        click.echo(f"{color_code}{current_color}'s turn{Style.RESET_ALL}")
 
         # Display board
         click.echo("\nBoard:")
@@ -466,6 +462,7 @@ class LaskerMorris(AbstractGame):
         click.echo(
             f"{Fore.YELLOW}Orange: {self.player_hands['orange']}{Style.RESET_ALL}"
         )
+        click.echo("-------------------------------------------------")
 
     def determine_winner(self) -> Optional[LaskerPlayer]:
         """Check win conditions and return winner if game is over."""

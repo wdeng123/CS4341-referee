@@ -20,7 +20,9 @@ class LaskerPlayer(AbstractPlayer):
         command: Shell command to execute player program
     """
 
-    def __init__(self, command: str, color: str):
+    def __init__(
+        self, command: str, color: str, log: bool = False, debug: bool = False
+    ):
         """
         Initialize player with command and color.
 
@@ -31,7 +33,7 @@ class LaskerPlayer(AbstractPlayer):
         Raises:
             ValueError: If color is not "blue" or "orange"
         """
-        super().__init__(command)
+        super().__init__(command, log, debug)
 
         # Validate and set the color
         try:
