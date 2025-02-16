@@ -1,2 +1,5 @@
 TicTacToeAI
-python tictactoe_ai.py 
+python tictactoe_ai.py
+
+LaskerMorrisAI
+python lasker_morris_ai.py
