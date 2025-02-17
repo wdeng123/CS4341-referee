@@ -39,6 +39,7 @@ class LaskerMorrisAI:
         for pos in valid_positions:
             self.board[pos] = None
 
+
     def _get_valid_points(self) -> Set[str]:
         """Get all valid board points."""
         return set(self.board.keys())
@@ -98,9 +99,11 @@ class LaskerMorrisAI:
 
         for mill in mills:
             if position in mill:
-                if all(self.board[pos] == color for pos in mill):
+                if all(self.board.get(pos) == color for pos in mill):
                     return True
         return False
+
+
 
     def get_valid_moves(self, color: str) -> List[Tuple[str, str, str]]:
         """
@@ -117,9 +120,10 @@ class LaskerMorrisAI:
             for to_pos in self.valid_points:
                 if self.board[to_pos] is None:
                     # Check if move forms a mill
+                    original_value = self.board[to_pos]
                     self.board[to_pos] = color
                     forms_mill = self.is_mill(to_pos, color)
-                    self.board[to_pos] = None
+                    self.board[to_pos] = original_value
 
                     if forms_mill:
                         remove_positions = self._get_valid_remove_positions(color)
@@ -129,32 +133,34 @@ class LaskerMorrisAI:
                         valid_moves.append((from_pos, to_pos, 'r0'))
 
         # Phase 2 & 3: Moving pieces on board
-        if stones_on_board > 0:
-            for from_pos in self.valid_points:
-                if self.board[from_pos] == color:
-                    # Get possible destinations
-                    if total_stones > 3:
-                        # Normal movement to adjacent points
-                        possible_to = self.adjacent_points[from_pos]
-                    else:
-                        # Flying movement to any empty point
-                        possible_to = self.valid_points
+        else:
+            if stones_on_board > 0:
+                for from_pos in self.valid_points:
+                    if self.board[from_pos] == color:
+                        # Get possible destinations
+                        if total_stones > 3:
+                            # Normal movement to adjacent points
+                            possible_to = self.adjacent_points[from_pos]
+                        else:
+                            # Flying movement to any empty point
+                            possible_to = self.valid_points
 
-                    for to_pos in possible_to:
-                        if self.board[to_pos] is None:
-                            # Check if move forms a mill
-                            self.board[from_pos] = None
-                            self.board[to_pos] = color
-                            forms_mill = self.is_mill(to_pos, color)
-                            self.board[to_pos] = None
-                            self.board[from_pos] = color
+                        for to_pos in possible_to:
+                            if self.board[to_pos] is None:
+                                # Check if move forms a mill
+                                self.board[from_pos] = None
+                                self.board[to_pos] = color
+                                forms_mill = self.is_mill(to_pos, color)
+                                self.board[to_pos] = None
+                                self.board[from_pos] = color
 
-                            if forms_mill:
-                                remove_positions = self._get_valid_remove_positions(color)
-                                for remove_pos in remove_positions:
-                                    valid_moves.append((from_pos, to_pos, remove_pos))
-                            else:
-                                valid_moves.append((from_pos, to_pos, 'r0'))
+                                if forms_mill:
+                                    remove_positions = self._get_valid_remove_positions(color)
+                                    for remove_pos in remove_positions:
+                                        valid_moves.append((from_pos, to_pos, remove_pos))
+
+                                else:
+                                    valid_moves.append((from_pos, to_pos, 'r0'))
 
         return valid_moves
 
@@ -173,8 +179,8 @@ class LaskerMorrisAI:
 
         # If all opponent's stones are in mills, then all positions are valid
         if all_in_mill:
-            opponent_positions = [pos for pos, stone in self.board.items() 
-                               if stone == opponent_color]
+            opponent_positions = [pos for pos, stone in self.valid_points
+                               if self.board.items() == opponent_color]
 
         return opponent_positions
 
@@ -197,13 +203,19 @@ class LaskerMorrisAI:
         if remove_pos != 'r0':
             self.board[remove_pos] = None
 
+
+
     def undo_move(self, move: Tuple[str, str, str]) -> None:
         """Undo a move on the board."""
         from_pos, to_pos, remove_pos = move
 
+        #test
+        opponent_color = 'orange' if from_pos == 'h1' else 'blue'
+
+
         # Restore removed stone if any
         if remove_pos != 'r0':
-            self.board[remove_pos] = self.opponent_color
+            self.board[remove_pos] = opponent_color
 
         # Handle placing from hand
         if from_pos.startswith('h'):
@@ -215,6 +227,7 @@ class LaskerMorrisAI:
             color = self.board[to_pos]
             self.board[to_pos] = None
             self.board[from_pos] = color
+
 
     def evaluate_board(self) -> int:
         """
@@ -353,17 +366,20 @@ class LaskerMorrisAI:
 
         return best_score, best_move
 
-    def get_best_move(self) -> str:
+    def get_best_move(self) -> str | tuple[str, str, str]:
         """Get best move using minimax algorithm with alpha-beta pruning."""
         _, best_move = self.minimax(4, True)  # Adjust depth based on performance
         if best_move:
+            #return f"{best_move[0]} {best_move[1]} {best_move[2]}"
             return f"{best_move[0]} {best_move[1]} {best_move[2]}"
         return self.get_valid_moves(self.color)[0]
 
     def update_board(self, move_str: str) -> None:
         """Update board with opponent's move."""
         from_pos, to_pos, remove_pos = move_str.split()
+
         self.make_move((from_pos, to_pos, remove_pos))
+
 
 def main():
     """Main function to handle game communication."""
