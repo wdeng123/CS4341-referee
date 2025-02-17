@@ -7,13 +7,10 @@ Includes optional logging of read/write operations.
 
 import shlex
 import subprocess
-import sys
-import threading
 from abc import ABC
-from collections import deque
 from datetime import datetime
 from time import sleep
-from typing import IO, Deque, Optional
+from typing import Optional
 
 
 class AbstractPlayer(ABC):
@@ -24,38 +21,20 @@ class AbstractPlayer(ABC):
         process: Subprocess instance for the player program
         command: Shell command to execute player program
         log: Whether to log the moves
-        forward_output: Whether to forward subprocess output
     """
 
-    def __init__(
-        self,
-        command: str,
-        log: bool = False,
-        forward_output: bool = False,
-        stdout: Optional[IO[str]] = sys.stdout,
-        stderr: Optional[IO[str]] = sys.stdin,
-    ):
+    def __init__(self, command: str, log: bool = False, debug: bool = True):
         """
         Initialize player with command to run their process.
 
         Args:
             command: Shell command (e.g. "python3 player.py")
-            log: If True, log all read/write operations to log.txt
-            forward_output: If True, forward subprocess output
-            stdout: Output stream for stdout (defaults to None)
-            stderr: Output stream for stderr (defaults to None)
+            log_reads: If True, log all read operations to log.txt
+            log_writes: If True, log all write operations to log.txt
         """
         self.process: Optional[subprocess.Popen] = None
         self.command = command
         self.log = log
-        self.forward_output = forward_output
-        self.stdout = stdout
-        self.stderr = stderr
-        self._stdout_thread: Optional[threading.Thread] = None
-        self._stderr_thread: Optional[threading.Thread] = None
-        self._output_queue: Deque[str] = deque()
-        self._queue_lock = threading.Lock()
-        self._stop_event = threading.Event()
 
     def _log_operation(self, operation: str, data: str) -> None:
         """
@@ -75,7 +54,6 @@ class AbstractPlayer(ABC):
 
     def start(self) -> None:
         """Start the player's subprocess with pipes for communication."""
-        self._stop_event.clear()
         self.process = subprocess.Popen(
             shlex.split(self.command),
             stdin=subprocess.PIPE,
@@ -83,24 +61,6 @@ class AbstractPlayer(ABC):
             stderr=subprocess.PIPE,
             text=True,
         )
-
-        if self.process:
-            # Always start stdout processing thread
-            self._stdout_thread = threading.Thread(
-                target=self._process_output,
-                args=(self.process.stdout, self.stdout),
-                daemon=True,
-            )
-            self._stdout_thread.start()
-
-            # Start stderr thread if needed
-            if self.stderr is not None:
-                self._stderr_thread = threading.Thread(
-                    target=self._process_output,
-                    args=(self.process.stderr, self.stderr),
-                    daemon=True,
-                )
-                self._stderr_thread.start()
 
     def write(self, data: str) -> None:
         """
@@ -117,64 +77,24 @@ class AbstractPlayer(ABC):
 
     def read(self) -> str:
         """
-        Read one line from the output queue.
+        Read one line from player's stdout.
 
         Returns:
             String read from the process output
         """
-        # Try to get a line from the queue
-        while True:
-            with self._queue_lock:
-                if self._output_queue:
-                    data = self._output_queue.popleft().strip()
-                    if self.log:
-                        self._log_operation("READ", data)
-                    return data
-
-            # If queue is empty and process is dead, return empty string
-            if not self.process or self.process.poll() is not None:
-                return ""
-
-            # Small sleep to prevent busy waiting
-            sleep(0.001)
-
-    def _process_output(self, pipe: IO[str], target: Optional[IO[str]]) -> None:
-        """
-        Process output from pipe, storing in queue and optionally forwarding.
-        """
-        try:
-            while not self._stop_event.is_set():
-                line = pipe.readline()
-                if not line:
-                    break
-
-                # Store in queue for read() method
-                with self._queue_lock:
-                    self._output_queue.append(line)
-
-                # Forward if requested
-                if self.forward_output and target:
-                    try:
-                        target.write(line)
-                        target.flush()
-                        if self.log:
-                            self._log_operation("FORWARD", line.strip())
-                    except (ValueError, IOError):
-                        break
-
-        except (ValueError, IOError):
-            pass
+        if self.process and self.process.stdout:
+            data = self.process.stdout.readline().strip()
+            if self.log:
+                self._log_operation("READ", data)
+            return data
+        return ""
 
     def stop(self) -> None:
         """Terminate the player process safely and cleanup resources."""
-        self._stop_event.set()
-
+        sleep(0.25)
         if self.process:
             try:
-                # First terminate the process
-                self.process.terminate()
-
-                # Then close pipes
+                # First attempt graceful termination first closing the pipes and then the process
                 if self.process.stdin:
                     self.process.stdin.close()
                 if self.process.stdout:
@@ -182,24 +102,21 @@ class AbstractPlayer(ABC):
                 if self.process.stderr:
                     self.process.stderr.close()
 
-                # Wait for processing threads to finish
-                if self._stdout_thread:
-                    self._stdout_thread.join(timeout=0.1)
-                if self._stderr_thread:
-                    self._stderr_thread.join(timeout=0.1)
+                self.process.terminate()
 
+                # Wait for a short time for process to terminate
                 try:
-                    self.process.wait(timeout=0.1)
+                    self.process.wait(timeout=1.0)
                 except subprocess.TimeoutExpired:
+                    # If process doesn't terminate gracefully, force kill it
                     self.process.kill()
-
+                    self.process.wait(timeout=1.0)
             except ProcessLookupError:
+                # Process already terminated
                 pass
             finally:
+                # Note we close the process
                 self.process = None
-                self._stdout_thread = None
-                self._stderr_thread = None
-                self._output_queue.clear()
 
     def __del__(self):
         """Ensure process cleanup on deletion."""

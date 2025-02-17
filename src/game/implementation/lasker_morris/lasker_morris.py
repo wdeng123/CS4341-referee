@@ -555,7 +555,7 @@ class LaskerMorris(AbstractGame):
             if winner:
                 winner_color = (
                     self._player2.get_color()
-                    if self._current_player == self._player1
+                    if self._current_player == self._player2
                     else self._player1.get_color()
                 )
                 loser_color = self._current_player.get_color()
