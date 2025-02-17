@@ -73,6 +73,7 @@ def start_game(
             debug=debug,
             logging=log,
             port=port,
+            print_board=debug
         )
         winner = game.run_game()
 

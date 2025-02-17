@@ -44,6 +44,7 @@ class LaskerMorris(AbstractGame):
         self.debug = debug
         self.port = port
         self.prin_board = print_board
+        self.moves_without_taking = 0
 
         # Initialize players with randomly assigned colors
         colors = ["blue", "orange"]
@@ -219,6 +220,7 @@ class LaskerMorris(AbstractGame):
 
         # Validate remove position
         if remove != "r0":
+            self.moves_without_taking += 0
             if remove in self.invalid_fields or remove not in self.board:
                 click.echo(
                     f"\n{Fore.RED}Invalid move: Cannot remove stone - position {remove} does not exist on the board{Style.RESET_ALL}"
@@ -250,6 +252,9 @@ class LaskerMorris(AbstractGame):
                 f"\n{Fore.RED}Invalid move: Must remove an opponent's stone after forming a mill{Style.RESET_ALL}"
             )
             return False
+        else:
+            # Track every move without taking a piece
+            self.moves_without_taking += 1
 
         return True
 
@@ -467,9 +472,10 @@ class LaskerMorris(AbstractGame):
     def determine_winner(self) -> Optional[LaskerPlayer]:
         """Check win conditions and return winner if game is over."""
         # Check for draw condition
-        if self._is_oscillating_moves():
+        if self._is_oscillating_moves() or self.moves_without_taking >= 20:
             self._is_game_over = True
             message = "Draw!"
+            click.echo(message)
             if self.visual:
                 self.web.end_message = message
             self._player1.write(message)

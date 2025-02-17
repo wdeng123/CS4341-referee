@@ -226,6 +226,22 @@ class TestLaskerMorris(unittest.TestCase):
         self.game.game_history = moves
         self.assertFalse(self.game._is_oscillating_moves())
 
+    def test_game_end_after_20_moves_without_capture(self) -> None:
+        """Test game ending in a draw after 20 moves without any captures"""
+        # Setup a game with 20 moves without captures
+        self.game._is_game_over = False
+        self.game.game_history = []
+        self.game.moves_without_taking = 20
+
+        # Check winner determination
+        winner = self.game.determine_winner()
+
+        # Verify draw conditions
+        self.assertIsNone(winner)  # Draw should return None
+        self.assertTrue(self.game._is_game_over)
+        self.game._player1.write.assert_called()
+        self.game._player2.write.assert_called()
+
     # Game End Tests
     def test_win_conditions(self) -> None:
         """Test various win conditions"""
