@@ -16,6 +16,7 @@ class LaskerMorrisAI:
         Args:
             color: Player color ('blue' or 'orange')
         """
+        self.removed_colors = []
         self.color = color
         self.opponent_color = 'orange' if color == 'blue' else 'blue'
         self.board: Dict[str, Optional[str]] = {}
@@ -142,11 +143,15 @@ class LaskerMorrisAI:
                         if remove_positions:  # Only add moves if there are stones to remove
                             for remove_pos in remove_positions:
                                 valid_moves.append((from_pos, to_pos, remove_pos))
-
-                                #test
-                                print(from_pos, to_pos, remove_pos)
                         else:
-                            valid_moves.append((from_pos, to_pos, 'r0'))
+                            # If no stones can be normally removed, remove any stone
+                            opponent_color = 'orange' if color == 'blue' else 'blue'
+                            opponent_stones = [pos for pos, stone in self.board.items() if stone == opponent_color]
+                            if opponent_stones:
+                                valid_moves.append(
+                                    (from_pos, to_pos, opponent_stones[0]))  # Remove the first opponent's stone
+                            else:
+                                valid_moves.append((from_pos, to_pos, 'r0'))  # If there's no
 
                     else:
                         valid_moves.append((from_pos, to_pos, 'r0'))
@@ -179,7 +184,16 @@ class LaskerMorrisAI:
                                     for remove_pos in remove_positions:
                                         valid_moves.append((from_pos, to_pos, remove_pos))
                                 else:
-                                    valid_moves.append((from_pos, to_pos, 'r0'))
+                                    # If no stones can be normally removed, remove any stone
+                                    opponent_color = 'orange' if color == 'blue' else 'blue'
+                                    opponent_stones = [pos for pos, stone in self.board.items() if
+                                                       stone == opponent_color]
+                                    if opponent_stones:
+                                        valid_moves.append(
+                                            (from_pos, to_pos, opponent_stones[0]))  # Remove the first opponent's stone
+                                    else:
+                                        valid_moves.append(
+                                            (from_pos, to_pos, 'r0'))  # If there's no opponent stone, do nothing
                             else:
                                 valid_moves.append((from_pos, to_pos, 'r0'))
 
@@ -214,15 +228,26 @@ class LaskerMorrisAI:
             color = 'blue' if from_pos == 'h1' else 'orange'
             self.stones_in_hand[color] -= 1
             self.board[to_pos] = color
+
         else:
             # Handle moving on board
             color = self.board[from_pos]
             self.board[from_pos] = None
             self.board[to_pos] = color
+            #print(color, 1)
 
         # Handle removing opponent's stone
         if remove_pos != 'r0':
+            # assert self.board[
+            #            remove_pos] is not None, f"Attempting to remove non-existent stone at {remove_pos}, board: {self.board}"
+            removed_color = self.board[remove_pos]
+            self.removed_colors.append(removed_color)
+            #print(f"Removing {remove_pos}, color: {self.removed_color}, board before: {self.board}", 2)
             self.board[remove_pos] = None
+            #print(f"Board after: {self.board}", 2)
+            # self.removed_color = self.board[remove_pos]
+            # self.board[remove_pos] = None
+            # print(f"Board after: {self.board}", 2)
 
     def undo_move(self, move: Tuple[str, str, str]) -> None:
         """Undo a move on the board."""
@@ -230,7 +255,9 @@ class LaskerMorrisAI:
 
         # Restore removed stone if any
         if remove_pos != 'r0':
-            self.board[remove_pos] = self.opponent_color
+            removed_color = self.removed_colors.pop()
+            self.board[remove_pos] = removed_color
+            # print(self.removed_color, 3)
 
         # Handle placing from hand
         if from_pos.startswith('h'):
@@ -242,6 +269,7 @@ class LaskerMorrisAI:
             color = self.board[to_pos]
             self.board[to_pos] = None
             self.board[from_pos] = color
+            #print(color,4)
 
     def evaluate_board(self) -> int:
         """
@@ -391,6 +419,7 @@ class LaskerMorrisAI:
         """Update board with opponent's move."""
         from_pos, to_pos, remove_pos = move_str.split()
         self.make_move((from_pos, to_pos, remove_pos))
+        #print(self.board)
 
 def main():
     """Main function to handle game communication."""
