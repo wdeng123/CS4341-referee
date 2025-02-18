@@ -7,7 +7,7 @@ def create_cli() -> click.Group:
     """Create the main CLI group with all commands"""
 
     @click.group()
-    @click.version_option("1.0.8")
+    @click.version_option("1.0.10")
     def cli():
         pass
 

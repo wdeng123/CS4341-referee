@@ -73,15 +73,13 @@ def start_game(
             debug=debug,
             logging=log,
             port=port,
+            print_board=debug
         )
         winner = game.run_game()
 
         if winner:
             color_code = Fore.BLUE if winner.get_color() == "blue" else Fore.YELLOW
-            click.echo(
-                f"\n{color_code}Game over! Winner: {
-                    winner.get_color()}{Style.RESET_ALL}"
-            )
+            click.echo(f"\n{color_code}Game over! Winner: {winner.get_color()}{Style.RESET_ALL}")
         else:
             click.echo(f"\n{Fore.GREEN}Game over! Draw!{Style.RESET_ALL}")
 
@@ -183,17 +181,13 @@ def start_tictactoe(
         # Display game result
         if winner:
             color_code = Fore.BLUE if winner.get_symbol() == "X" else Fore.YELLOW
-            click.echo(
-                f"\n{color_code}Game over! Winner: Player {winner.get_symbol()}{Style.RESET_ALL}"
-            )
+            click.echo(f"\n{color_code}Game over! Winner: Player {winner.get_symbol()}{Style.RESET_ALL}")
         else:
             click.echo(f"\n{Fore.GREEN}Game over! It's a draw!{Style.RESET_ALL}")
 
         # Keep webserver running if visualization is enabled
         if visual:
-            click.echo(
-                f"\n{Fore.YELLOW}Press <CTRL>+C to exit visualization{Style.RESET_ALL}"
-            )
+            click.echo(f"\n{Fore.YELLOW}Press <CTRL>+C to exit visualization{Style.RESET_ALL}")
             try:
                 while True:
                     pass
