@@ -447,7 +447,7 @@ class LaskerMorris(AbstractGame):
 
         # Display board
         click.echo("\nBoard:")
-        for num in range(1, 8):
+        for num in range(7, 0, -1):
             row = ""
             for letter in "abcdefg":
                 pos = f"{letter}{num}"
