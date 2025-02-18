@@ -3,7 +3,12 @@ Lasker Morris AI player implementation using minimax algorithm with alpha-beta p
 """
 
 import sys
+import time
 from typing import Dict, List, Optional, Tuple, Set
+
+# Game constants
+TIME_LIMIT = 5  # 5 seconds time limit
+STALEMATE_THRESHOLD = 20  # 20 consecutive moves without mills or captures
 
 class LaskerMorrisAI:
     """
@@ -271,6 +276,31 @@ class LaskerMorrisAI:
             self.board[from_pos] = color
             #print(color,4)
 
+    def _evaluate_positions(self) -> int:
+        """
+        Evaluate board positions strategic value.
+        Returns higher score for controlling strategic positions.
+        """
+        center_points = {'d3', 'd5', 'c4', 'e4'}
+        corner_points = {'a1', 'a7', 'g1', 'g7'}
+        
+        ai_center = sum(1 for pos in center_points if self.board[pos] == self.color)
+        opp_center = sum(1 for pos in center_points if self.board[pos] == self.opponent_color)
+        
+        ai_corner = sum(1 for pos in corner_points if self.board[pos] == self.color)
+        opp_corner = sum(1 for pos in corner_points if self.board[pos] == self.opponent_color)
+        
+        return (ai_center - opp_center) * 2 + (ai_corner - opp_corner)
+
+    def _evaluate_mobility(self) -> int:
+        """
+        Evaluate pieces mobility.
+        Returns difference between AI's possible moves and opponent's possible moves.
+        """
+        ai_moves = len(self.get_valid_moves(self.color))
+        opp_moves = len(self.get_valid_moves(self.opponent_color))
+        return ai_moves - opp_moves
+
     def evaluate_board(self) -> int:
         """
         Evaluate current board state.
@@ -283,24 +313,27 @@ class LaskerMorrisAI:
         opp_stones = sum(1 for _, stone in self.board.items() if stone == self.opponent_color)
         opp_stones += self.stones_in_hand[self.opponent_color]
 
-        # Count mills
-        ai_mills = self._count_mills(self.color)
-        opp_mills = self._count_mills(self.opponent_color)
-
-        # Count potential mills (two stones in line)
-        ai_potential = self._count_potential_mills(self.color)
-        opp_potential = self._count_potential_mills(self.opponent_color)
-
         # Winning/losing conditions
         if opp_stones <= 2:
             return 1000
         if ai_stones <= 2:
             return -1000
 
-        # Combine factors with weights
-        score = (ai_stones - opp_stones) * 10
-        score += (ai_mills - opp_mills) * 50
-        score += (ai_potential - opp_potential) * 30
+        # Count mills
+        ai_mills = self._count_mills(self.color)
+        opp_mills = self._count_mills(self.opponent_color)
+
+        # Count potential mills
+        ai_potential = self._count_potential_mills(self.color)
+        opp_potential = self._count_potential_mills(self.opponent_color)
+
+        # Combine all evaluation factors with weights
+        score = 0
+        score += (ai_stones - opp_stones) * 10  # Stone difference
+        score += (ai_mills - opp_mills) * 50    # Mills difference
+        score += (ai_potential - opp_potential) * 30  # Potential mills
+        score += self._evaluate_positions() * 20  # Position control
+        score += self._evaluate_mobility() * 15   # Mobility advantage
 
         return score
 
@@ -354,7 +387,7 @@ class LaskerMorrisAI:
         ]
 
     def minimax(self, depth: int, is_maximizing: bool, alpha: float = float('-inf'), 
-                beta: float = float('inf')) -> Tuple[int, Optional[Tuple[str, str, str]]]:
+                beta: float = float('inf'), start_time: float = None) -> Tuple[int, Optional[Tuple[str, str, str]]]:
         """
         Minimax algorithm implementation with alpha-beta pruning.
         
@@ -363,10 +396,15 @@ class LaskerMorrisAI:
             is_maximizing: True if maximizing player's turn
             alpha: Best value that maximizer can guarantee
             beta: Best value that minimizer can guarantee
+            start_time: Start time of the search
         
         Returns:
             Tuple of (best score, best move)
         """
+        # Check time limit
+        if start_time and time.time() - start_time > TIME_LIMIT * 0.95:  # Leave 5% margin
+            return self.evaluate_board(), None
+
         if depth == 0:
             return self.evaluate_board(), None
 
@@ -381,7 +419,7 @@ class LaskerMorrisAI:
             best_score = float('-inf')
             for move in valid_moves:
                 self.make_move(move)
-                score, _ = self.minimax(depth - 1, False, alpha, beta)
+                score, _ = self.minimax(depth - 1, False, alpha, beta, start_time)
                 self.undo_move(move)
 
                 if score > best_score:
@@ -395,7 +433,7 @@ class LaskerMorrisAI:
             best_score = float('inf')
             for move in valid_moves:
                 self.make_move(move)
-                score, _ = self.minimax(depth - 1, True, alpha, beta)
+                score, _ = self.minimax(depth - 1, True, alpha, beta, start_time)
                 self.undo_move(move)
 
                 if score < best_score:
@@ -409,11 +447,37 @@ class LaskerMorrisAI:
         return best_score, best_move
 
     def get_best_move(self) -> str | tuple[str, str, str]:
-        """Get best move using minimax algorithm with alpha-beta pruning."""
-        _, best_move = self.minimax(4, True)  # Adjust depth based on performance
-        if best_move:
-            return f"{best_move[0]} {best_move[1]} {best_move[2]}"
-        return self.get_valid_moves(self.color)[0]
+        """
+        Get best move using iterative deepening minimax with alpha-beta pruning.
+        Uses time limit to determine search depth.
+        """
+        start_time = time.time()
+        best_move = None
+        depth = 1
+        max_depth = 4  # Limit the maximum search depth to 4
+
+        try:
+            # Iterative deepening
+            while depth <= max_depth and time.time() - start_time < TIME_LIMIT * 0.8:  # Leave 20% margin
+                _, current_best_move = self.minimax(depth, True, float('-inf'), float('inf'), start_time)
+                if current_best_move:  # Only update if we found a valid move
+                    best_move = current_best_move
+                    # If we find a winning move, return immediately
+                    if _ >= 900:  
+                        break
+                depth += 1
+        except Exception as e:
+            print(f"Error in get_best_move: {str(e)}", file=sys.stderr)
+
+        # If no move found or error occurred, get any valid move
+        if not best_move:
+            valid_moves = self.get_valid_moves(self.color)
+            if valid_moves:
+                best_move = valid_moves[0]
+            else:
+                return "h1 a1 r0"  # Default move if no valid moves found
+
+        return f"{best_move[0]} {best_move[1]} {best_move[2]}"
 
     def update_board(self, move_str: str) -> None:
         """Update board with opponent's move."""
@@ -424,32 +488,46 @@ class LaskerMorrisAI:
 def main():
     """Main function to handle game communication."""
     ai = None
-    
-    while True:
-        try:
-            # Read input from referee
-            input_line = input().strip()
-            
-            # Initialize AI with assigned color
-            if input_line in ['blue', 'orange']:
-                ai = LaskerMorrisAI(input_line)
-                if input_line == 'blue':
-                    # Blue moves first
-                    move = ai.get_best_move()
-                    ai.update_board(move)
-                    print(move, flush=True)
-            else:
-                # Process opponent's move and respond
-                if ai:
-                    if input_line.startswith('END:'):
-                        break
-                    ai.update_board(input_line)
-                    move = ai.get_best_move()
-                    ai.update_board(move)
-                    print(move, flush=True)
+    try:
+        while True:
+            try:
+                # Read input from referee
+                input_line = input().strip()
+                
+                # Check for game end
+                if input_line.startswith('END:'):
+                    break
                     
-        except EOFError:
-            break
+                # Initialize AI with assigned color
+                if input_line in ['blue', 'orange']:
+                    ai = LaskerMorrisAI(input_line)
+                    if input_line == 'blue':
+                        # Blue moves first
+                        move = ai.get_best_move()
+                        ai.update_board(move)
+                        print(move, flush=True)
+                else:
+                    # Process opponent's move and respond
+                    if ai:
+                        # Validate opponent's move
+                        try:
+                            ai.update_board(input_line)
+                        except Exception as e:
+                            print(f"Invalid opponent move: {str(e)}", file=sys.stderr)
+                            continue
+
+                        # Generate and make our move
+                        move = ai.get_best_move()
+                        ai.update_board(move)
+                        print(move, flush=True)
+                        
+            except EOFError:
+                break
+            except Exception as e:
+                print(f"Error in main loop: {str(e)}", file=sys.stderr)
+                sys.exit(1)
+    except KeyboardInterrupt:
+        sys.exit(0)
 
 if __name__ == "__main__":
     main() 
