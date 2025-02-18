@@ -74,7 +74,16 @@ class LaskerMorrisAI:
         return adjacent
 
     def is_mill(self, position: str, color: str) -> bool:
-        """Check if placing a stone at position forms a mill."""
+        """
+        Check if placing a stone at position forms a mill.
+        
+        Args:
+            position: Position to check for mill formation
+            color: Color of the stone ('blue' or 'orange')
+            
+        Returns:
+            bool: True if placing a stone forms a mill
+        """
         mills = [
             # Vertical mills
             ['a1', 'a4', 'a7'],
@@ -96,9 +105,16 @@ class LaskerMorrisAI:
             ['a7', 'd7', 'g7']
         ]
 
+        # Check each possible mill containing this position
         for mill in mills:
             if position in mill:
-                if all(self.board[pos] == color for pos in mill):
+                # Create a temporary board state to check the mill
+                board_copy = self.board.copy()
+                board_copy[position] = color
+                
+                # Check if all positions in this mill are of the same color
+                mill_stones = [board_copy[pos] for pos in mill]
+                if all(stone == color for stone in mill_stones):
                     return True
         return False
 
@@ -123,8 +139,11 @@ class LaskerMorrisAI:
 
                     if forms_mill:
                         remove_positions = self._get_valid_remove_positions(color)
-                        for remove_pos in remove_positions:
-                            valid_moves.append((from_pos, to_pos, remove_pos))
+                        if remove_positions:  # Only add moves if there are stones to remove
+                            for remove_pos in remove_positions:
+                                valid_moves.append((from_pos, to_pos, remove_pos))
+                        else:
+                            valid_moves.append((from_pos, to_pos, 'r0'))
                     else:
                         valid_moves.append((from_pos, to_pos, 'r0'))
 
@@ -151,8 +170,11 @@ class LaskerMorrisAI:
 
                             if forms_mill:
                                 remove_positions = self._get_valid_remove_positions(color)
-                                for remove_pos in remove_positions:
-                                    valid_moves.append((from_pos, to_pos, remove_pos))
+                                if remove_positions:  # Only add moves if there are stones to remove
+                                    for remove_pos in remove_positions:
+                                        valid_moves.append((from_pos, to_pos, remove_pos))
+                                else:
+                                    valid_moves.append((from_pos, to_pos, 'r0'))
                             else:
                                 valid_moves.append((from_pos, to_pos, 'r0'))
 
