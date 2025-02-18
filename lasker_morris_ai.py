@@ -142,10 +142,15 @@ class LaskerMorrisAI:
                         if remove_positions:  # Only add moves if there are stones to remove
                             for remove_pos in remove_positions:
                                 valid_moves.append((from_pos, to_pos, remove_pos))
+
+                                #test
+                                print(from_pos, to_pos, remove_pos)
                         else:
                             valid_moves.append((from_pos, to_pos, 'r0'))
+
                     else:
                         valid_moves.append((from_pos, to_pos, 'r0'))
+
 
         # Phase 2 & 3: Moving pieces on board
         if stones_on_board > 0:
@@ -375,7 +380,7 @@ class LaskerMorrisAI:
 
         return best_score, best_move
 
-    def get_best_move(self) -> str:
+    def get_best_move(self) -> str | tuple[str, str, str]:
         """Get best move using minimax algorithm with alpha-beta pruning."""
         _, best_move = self.minimax(4, True)  # Adjust depth based on performance
         if best_move:
