@@ -225,6 +225,12 @@
             color: #64748b;
             margin-bottom: 1.5rem;
         }
+        .coordinate-label {
+            font-size: 12px;
+            fill: var(--secondary);
+            font-family: system-ui, -apple-system, sans-serif;
+            font-weight: 500;
+        }
 
     </style>
 </head>
@@ -238,6 +244,10 @@
         <div class="game-container">
             <div class="board">
                 <svg class="board-svg" viewBox="0 0 400 400">
+                    <!-- Background rectangle -->
+                    <rect x="0" y="0" width="400" height="400" fill="var(--board)" rx="8"/>
+
+                    <!-- Board lines -->
                     <rect class="board-line" x="50" y="50" width="300" height="300" fill="none" stroke="#475569" stroke-width="2"/>
                     <rect class="board-line" x="100" y="100" width="200" height="200" fill="none" stroke="#475569" stroke-width="2"/>
                     <rect class="board-line" x="150" y="150" width="100" height="100" fill="none" stroke="#475569" stroke-width="2"/>
@@ -245,6 +255,25 @@
                     <line class="board-line" x1="200" y1="250" x2="200" y2="350" stroke="#475569" stroke-width="2"/>
                     <line class="board-line" x1="50" y1="200" x2="150" y2="200" stroke="#475569" stroke-width="2"/>
                     <line class="board-line" x1="250" y1="200" x2="350" y2="200" stroke="#475569" stroke-width="2"/>
+
+                    <!-- Column labels (a-g) -->
+                    <text x="50" y="380" class="coordinate-label">a</text>
+                    <text x="100" y="380" class="coordinate-label">b</text>
+                    <text x="150" y="380" class="coordinate-label">c</text>
+                    <text x="200" y="380" class="coordinate-label">d</text>
+                    <text x="250" y="380" class="coordinate-label">e</text>
+                    <text x="300" y="380" class="coordinate-label">f</text>
+                    <text x="350" y="380" class="coordinate-label">g</text>
+
+                    <!-- Row labels (1-7) -->
+                    <text x="25" y="350" class="coordinate-label">1</text>
+                    <text x="25" y="300" class="coordinate-label">2</text>
+                    <text x="25" y="250" class="coordinate-label">3</text>
+                    <text x="25" y="200" class="coordinate-label">4</text>
+                    <text x="25" y="150" class="coordinate-label">5</text>
+                    <text x="25" y="100" class="coordinate-label">6</text>
+                    <text x="25" y="50" class="coordinate-label">7</text>
+
                     <g id="board-pieces"></g>
                 </svg>
             </div>
