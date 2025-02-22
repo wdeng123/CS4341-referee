@@ -257,6 +257,8 @@ class LLM:
         self.make_move((from_pos, to_pos, remove_pos))
 
     def get_text(self,text: str)->str:
+        if not isinstance(text, str):
+            return "Invalid input"
         output = ""
         if '(' in text and ')' in text:
             match = re.search(r"\(([^()]+)\)", text)
@@ -264,7 +266,7 @@ class LLM:
                 output = match.group(1)
         else:
             output = text
-        return(output)
+        return output
 
     def is_valid_llm_move(self, gemini_move: str) -> str:
         """
@@ -272,7 +274,8 @@ class LLM:
            If invalid, re-prompt Gemini or return a random valid move.
            """
         move_parts = self.get_text(gemini_move)
-        #print("move parts",move_parts)
+        if not move_parts:
+            return "Invalid."
         move_parts = move_parts.strip().split()
 
         if len(move_parts) != 3:
@@ -324,7 +327,7 @@ class LLM:
 
     def get_random_move(self)-> str:
         """Return a random valid move from the list of valid moves."""
-        valid_moves = self.get_valid_moves(self.color)  # 获取当前玩家的有效移动
+        valid_moves = self.get_valid_moves(self.color)
 
         if valid_moves:
             move = ' '.join(random.choice(valid_moves))
@@ -467,6 +470,7 @@ def main():
                         #Blue moves first
                         move = ai.get_valid_llm_move()
                         ai.update_board(move)
+                        time.sleep(4)
                         #print(ai.board)
                         print(move, flush=True)
                 else:
@@ -482,6 +486,7 @@ def main():
                         # Generate and make our move
                         move = ai.get_valid_llm_move()
                         ai.update_board(move)
+                        time.sleep(4)
                         #print(ai.board)
                         print(move, flush=True)
 
