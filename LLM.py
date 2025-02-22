@@ -422,6 +422,7 @@ class LLM:
             f"###mills:\n{mills}\n"
             f"###adjacent points:\n{adjacent}\n"
             f"###color:\n{self.color}\n"
+            f"###stone in hand:\n{self.stones_in_hand}\n"
         
             #f"\n{hints}\n"
             f"Current board state:\n{self.board}\n"
