@@ -3,3 +3,6 @@ python tictactoe_ai.py
 
 LaskerMorrisAI
 python lasker_morris_ai.py
+
+LLM
+cs4341-referee laskermorris -p1 "python lasker_morris_ai.py" -p2 "python LLM.py" -t 60
