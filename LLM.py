@@ -272,13 +272,22 @@ class LLM:
            If invalid, re-prompt Gemini or return a random valid move.
            """
         move_parts = self.get_text(gemini_move)
-        move_parts = move_parts.split()
         #print("move parts",move_parts)
+        move_parts = move_parts.strip().split()
+
         if len(move_parts) != 3:
             #print("Invalid format, please try again.")
             return "Invalid format, please try again."
         from_position, to_position, removal = move_parts
         #print("split", from_position, to_position,removal)
+        valid_moves = self.get_valid_moves(self.color)
+        #print (valid_moves)
+        if not valid_moves:
+            # print ("Invalid. No valid moves available. The game is over.")
+            return "Invalid. No valid moves available. The game is over."
+        if tuple(move_parts) in valid_moves:
+            move = " ".join(move_parts)
+            return move
         if (from_position not in ('h1', 'h2') and (from_position not in self.board)) or to_position not in self.board:
             #print(f"Invalid move. Position {from_position} or {to_position} does not exist. Please try again.")
             return f"Invalid move. Position {from_position} or {to_position} does not exist. Please try again."
@@ -290,12 +299,6 @@ class LLM:
         if self.board[to_position] is not None:
             #print (f"Invalid move. Target position {to_position} is not empty or in hand. Please try again.")
             return f"Invalid move. Target position {to_position} is not empty or in hand. Please try again."
-
-        valid_moves = self.get_valid_moves(self.color)
-        if not valid_moves:
-            #print ("Invalid. No valid moves available. The game is over.")
-            return "Invalid. No valid moves available. The game is over."
-
         if self.is_mill(to_position, self.color):
             valid_removals = self._get_valid_remove_positions(self.color)
             if removal == "r0" and valid_removals:
@@ -304,9 +307,7 @@ class LLM:
             if removal not in valid_removals and removal != "r0":
                 #print(f"Invalid move. Attempt to remove an invalid stone {removal}. Please try again.")
                 return f"Invalid move. Attempt to remove an invalid stone {removal}. Please try again."
-        #print ("success")
-        move =  " ".join(move_parts)
-        return move
+        return "Invalid move. Please try again."
 
     def get_valid_llm_move(self)->str:
         """Get a valid move from Gemini with retries and fallback."""
@@ -319,14 +320,14 @@ class LLM:
             move = self.is_valid_llm_move(move)
             if not move.startswith("Invalid"):
                 return move
-        return " ".join(self.get_random_move())
+        return self.get_random_move()
 
     def get_random_move(self)-> str:
         """Return a random valid move from the list of valid moves."""
         valid_moves = self.get_valid_moves(self.color)  # 获取当前玩家的有效移动
 
         if valid_moves:
-            move = random.choice(valid_moves)
+            move = ' '.join(random.choice(valid_moves))
             return move
         else:
             return "Invalid. No valid moves available. The game is over."
@@ -442,6 +443,7 @@ class LLM:
         )
         response = client.models.generate_content(model="gemini-2.0-flash", contents=rules)
         #print("response",response)
+        #print(self.board)
         return response.text
 
 
