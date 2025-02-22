@@ -255,9 +255,10 @@ class TestLaskerMorris(unittest.TestCase):
         self.assertEqual(winner, self.game._player1)
 
         # Test draw by oscillation
-        moves = [{"move": "d1 d2 r0", "player": "blue", "board": {}, "hands": {}}] * 8
-        self.game.game_history = moves
-        self.game._is_oscillating_moves = Mock(return_value=True)
+        # moves = [{"move": "d1 d2 r0", "player": "blue", "board": {}, "hands": {}}] * 8
+        # self.game.game_history = moves
+        # self.game._is_oscillating_moves = Mock(return_value=True)
+        self.game.moves_without_taking = 21
 
         winner = self.game.determine_winner()
         self.assertIsNone(winner)
@@ -433,6 +434,7 @@ class TestLaskerMorris(unittest.TestCase):
         self.game.board["d1"] = "orange"
         self.game.board["d2"] = "orange"
         self.game.player_hands["orange"] = 0
+        self.game.moves_without_taking = 0
 
         # Check winner determination
         winner = self.game.determine_winner()
@@ -446,6 +448,7 @@ class TestLaskerMorris(unittest.TestCase):
     def test_game_end_by_oscillation_draw(self) -> None:
         """Test game ending in a draw due to repetitive moves"""
         # Setup oscillating move pattern
+        """
         self.game._is_game_over = False
         self.game.game_history = [
             {"move": "d1 d2 r0", "player": "blue", "board": {}, "hands": {}},
@@ -461,6 +464,8 @@ class TestLaskerMorris(unittest.TestCase):
             {"move": "d2 d1 r0", "player": "blue", "board": {}, "hands": {}},
             {"move": "e2 e1 r0", "player": "orange", "board": {}, "hands": {}},
         ]
+        """
+        self.game.moves_without_taking = 21
 
         # Check winner determination
         winner = self.game.determine_winner()

@@ -37,7 +37,7 @@ class LaskerMorris(AbstractGame):
             debug: Enable debug output if True
             logging: Enable logging if True
         """
-        self.move_timeout = timeout
+        self.move_timeout = timeout + 0.5
         self.game_history = []
         self.board_states = []
         self.hand_states = []
@@ -148,6 +148,67 @@ class LaskerMorris(AbstractGame):
             return True
         except Exception:
             return False
+
+    def _has_valid_moves(self, player_color: str) -> bool:
+        """Check if the given player has any valid moves available.
+
+        Args:
+            player_color: Color of the player to check ('blue' or 'orange')
+
+        Returns:
+            bool: True if the player has at least one valid move available
+        """
+        # If player has pieces in hand, they can always make a move
+        if self.player_hands[player_color] > 0:
+            # Check if there's at least one empty valid position
+            for pos in self.board:
+                if pos not in self.invalid_fields and self.board[pos] is None:
+                    return True
+            return False
+
+        # Get all pieces of the player
+        player_pieces = [pos for pos, color in self.board.items() if color == player_color]
+
+        # Check if player has exactly 3 pieces (can move to any empty position)
+        if len(player_pieces) == 3:
+            for pos in self.board:
+                if pos not in self.invalid_fields and self.board[pos] is None:
+                    return True
+        else:
+            # Check if any piece can move to an adjacent empty position
+            for piece_pos in player_pieces:
+                neighbors = {
+                    "a1": ["a4", "d1"],
+                    "a4": ["a1", "a7", "b4"],
+                    "a7": ["a4", "d7"],
+                    "b2": ["b4", "d2"],
+                    "b4": ["b2", "b6", "a4", "c4"],
+                    "b6": ["b4", "d6"],
+                    "c3": ["c4", "d3"],
+                    "c4": ["c3", "c5", "b4"],
+                    "c5": ["c4", "d5"],
+                    "d1": ["a1", "d2", "g1"],
+                    "d2": ["b2", "d1", "d3", "f2"],
+                    "d3": ["c3", "d2", "e3"],
+                    "d5": ["c5", "d6", "e5"],
+                    "d6": ["b6", "d5", "d7", "f6"],
+                    "d7": ["a7", "d6", "g7"],
+                    "e3": ["d3", "e4"],
+                    "e4": ["e3", "e5", "f4"],
+                    "e5": ["d5", "e4"],
+                    "f2": ["d2", "f4"],
+                    "f4": ["e4", "f2", "f6", "g4"],
+                    "f6": ["d6", "f4"],
+                    "g1": ["d1", "g4"],
+                    "g4": ["f4", "g1", "g7"],
+                    "g7": ["d7", "g4"],
+                }
+
+                if piece_pos in neighbors:
+                    for neighbor in neighbors[piece_pos]:
+                        if self.board[neighbor] is None:
+                            return True
+        return False
 
     def _is_valid_move(self, source: str, target: str, remove: str) -> bool:
         """Validate move according to game rules.
@@ -472,7 +533,7 @@ class LaskerMorris(AbstractGame):
     def determine_winner(self) -> Optional[LaskerPlayer]:
         """Check win conditions and return winner if game is over."""
         # Check for draw condition
-        if self._is_oscillating_moves() or self.moves_without_taking >= 30:
+        if self.moves_without_taking >= 20:
             self._is_game_over = True
             message = "Draw!"
             click.echo(message)
@@ -489,7 +550,7 @@ class LaskerMorris(AbstractGame):
             color = player.get_color()
             if self._count_player_pieces(color) < 3:
                 self._is_game_over = True
-                return self._player2 if player == self._player1 else self._player1
+                return self._player1 if player == self._player2 else self._player2
 
         return None
 
@@ -524,6 +585,22 @@ class LaskerMorris(AbstractGame):
     def run_game(self) -> Optional[LaskerPlayer]:
         """Main game loop."""
         while not self.is_game_over:
+
+            # Check for immoblilzation
+            if not self._has_valid_moves(self._current_player.get_color()):
+                self._is_game_over = True
+                winner = self._player2 if self._current_player == self._player1 else self._player1
+                winner_color = winner.get_color()
+                loser_color = self._current_player.get_color()
+                message = f"END: {winner_color} WINS! {loser_color} LOSES! No valid moves available!"
+                if self.visual:
+                    self.web.end_message = message
+                self._player1.write(message)
+                self._player2.write(message)
+                self._player1.stop()
+                self._player2.stop()
+                return winner
+
             # Get and validate current player's move
             move = self._get_move_with_timeout()
             if not move or not self.make_move(move):
@@ -564,7 +641,11 @@ class LaskerMorris(AbstractGame):
                     if self._current_player == self._player2
                     else self._player1.get_color()
                 )
-                loser_color = self._current_player.get_color()
+                loser_color = (
+                    self._player2.get_color()
+                    if self._current_player == self._player1
+                    else self._player1.get_color()
+                )
                 message = (
                     f"END: {winner_color} WINS! {loser_color} LOSES! Ran out of pieces!"
                 )
