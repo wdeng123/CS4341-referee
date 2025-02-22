@@ -272,41 +272,53 @@ class LLM:
            If invalid, re-prompt Gemini or return a random valid move.
            """
         move_parts = self.get_text(gemini_move)
+        move_parts = move_parts.split()
+        #print("move parts",move_parts)
         if len(move_parts) != 3:
+            #print("Invalid format, please try again.")
             return "Invalid format, please try again."
         from_position, to_position, removal = move_parts
-        if from_position not in self.board or to_position not in self.board:
+        #print("split", from_position, to_position,removal)
+        if (from_position not in ('h1', 'h2') and (from_position not in self.board)) or to_position not in self.board:
+            #print(f"Invalid move. Position {from_position} or {to_position} does not exist. Please try again.")
             return f"Invalid move. Position {from_position} or {to_position} does not exist. Please try again."
 
-        if self.board[from_position] != self.color:
+        if from_position not in ('h1', 'h2') and self.board[from_position] != self.color:
+            #print (f"Invalid move. The stone at {from_position} is not {self}'s stone. Please try again.")
             return f"Invalid move. The stone at {from_position} is not {self}'s stone. Please try again."
 
         if self.board[to_position] is not None:
+            #print (f"Invalid move. Target position {to_position} is not empty or in hand. Please try again.")
             return f"Invalid move. Target position {to_position} is not empty or in hand. Please try again."
 
         valid_moves = self.get_valid_moves(self.color)
         if not valid_moves:
+            #print ("Invalid. No valid moves available. The game is over.")
             return "Invalid. No valid moves available. The game is over."
 
         if self.is_mill(to_position, self.color):
             valid_removals = self._get_valid_remove_positions(self.color)
             if removal == "r0" and valid_removals:
+                #print(f"Invalid move. A mill was formed but no removal was made. Please try again.")
                 return f"Invalid move. A mill was formed but no removal was made. Please try again."
             if removal not in valid_removals and removal != "r0":
+                #print(f"Invalid move. Attempt to remove an invalid stone {removal}. Please try again.")
                 return f"Invalid move. Attempt to remove an invalid stone {removal}. Please try again."
-
-        return move_parts
+        #print ("success")
+        move =  " ".join(move_parts)
+        return move
 
     def get_valid_llm_move(self)->str:
         """Get a valid move from Gemini with retries and fallback."""
         move = self.get_llm_move("")
         move = self.is_valid_llm_move(move)
         if not move.startswith("Invalid"):
-            return " ".join(move)
+            return move
         else:
+            move = self.get_llm_move(move)
             move = self.is_valid_llm_move(move)
             if not move.startswith("Invalid"):
-                return " ".join(move)
+                return move
         return " ".join(self.get_random_move())
 
     def get_random_move(self)-> str:
@@ -429,6 +441,7 @@ class LLM:
             f"Your color: {self.color}\n"
         )
         response = client.models.generate_content(model="gemini-2.0-flash", contents=rules)
+        #print("response",response)
         return response.text
 
 
@@ -452,6 +465,7 @@ def main():
                         #Blue moves first
                         move = ai.get_valid_llm_move()
                         ai.update_board(move)
+                        #print(ai.board)
                         print(move, flush=True)
                 else:
                     # Process opponent's move and respond
@@ -466,6 +480,7 @@ def main():
                         # Generate and make our move
                         move = ai.get_valid_llm_move()
                         ai.update_board(move)
+                        #print(ai.board)
                         print(move, flush=True)
 
             except EOFError:
