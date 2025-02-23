@@ -4,14 +4,23 @@ Lasker Morris AI player implementation using Gemini AI 2.0.
 
 import sys
 import time
+import os
 from typing import Dict, List, Optional, Tuple, Set
 from google import genai
 import random
 import re
 
 # Game constants
-TIME_LIMIT = 5  # 5 seconds time limit
+TIME_LIMIT = 60  # 60 seconds time limit for LLM player
+API_CALL_BUFFER = 2  # Buffer time for API calls
+MIN_MOVE_TIME = 0.5  # Minimum time to wait between moves
+MAX_MOVE_TIME = 2  # Maximum time to wait between moves
+API_RATE_LIMIT = 60/15  # 15 requests per minute = 4 seconds between calls
 STALEMATE_THRESHOLD = 20  # 20 consecutive moves without mills or captures
+MAX_RETRIES = 2  # Maximum number of retries for LLM move generation
+
+# Get API key from environment variable
+API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyB59sCEon9MxTlYeJImh9lTSIADNFdY5jU')
 
 
 class LLM:
@@ -257,8 +266,17 @@ class LLM:
         self.make_move((from_pos, to_pos, remove_pos))
 
     def get_text(self,text: str)->str:
+        """
+        Extract move from LLM response text.
+        
+        Args:
+            text: Raw response from LLM
+            
+        Returns:
+            str: Extracted move or empty string if invalid
+        """
         if not isinstance(text, str):
-            return "Invalid input"
+            return ""
         output = ""
         if '(' in text and ')' in text:
             match = re.search(r"\(([^()]+)\)", text)
@@ -270,63 +288,79 @@ class LLM:
 
     def is_valid_llm_move(self, gemini_move: str) -> str:
         """
-           Validate the move returned by Gemini and ensure it adheres to the game rules.
-           If invalid, re-prompt Gemini or return a random valid move.
-           """
+        Validate the move returned by Gemini and ensure it adheres to the game rules.
+        
+        Args:
+            gemini_move: Move string from LLM
+            
+        Returns:
+            str: Valid move string or error message starting with 'Invalid'
+        """
         move_parts = self.get_text(gemini_move)
         if not move_parts:
-            return "Invalid."
+            return "Invalid: Empty move"
         move_parts = move_parts.strip().split()
 
         if len(move_parts) != 3:
-            #print("Invalid format, please try again.")
-            return "Invalid format, please try again."
+            return "Invalid: Move must have exactly 3 parts (from, to, remove)"
+            
         from_position, to_position, removal = move_parts
-        #print("split", from_position, to_position,removal)
         valid_moves = self.get_valid_moves(self.color)
-        #print (valid_moves)
+        
         if not valid_moves:
-            # print ("Invalid. No valid moves available. The game is over.")
-            return "Invalid. No valid moves available. The game is over."
+            return "Invalid: No valid moves available. The game is over."
+            
         if tuple(move_parts) in valid_moves:
-            move = " ".join(move_parts)
-            return move
+            return " ".join(move_parts)
+            
         if (from_position not in ('h1', 'h2') and (from_position not in self.board)) or to_position not in self.board:
-            #print(f"Invalid move. Position {from_position} or {to_position} does not exist. Please try again.")
-            return f"Invalid move. Position {from_position} or {to_position} does not exist. Please try again."
+            return f"Invalid: Position {from_position} or {to_position} does not exist"
 
         if from_position not in ('h1', 'h2') and self.board[from_position] != self.color:
-            #print (f"Invalid move. The stone at {from_position} is not {self}'s stone. Please try again.")
-            return f"Invalid move. The stone at {from_position} is not {self}'s stone. Please try again."
+            return f"Invalid: The stone at {from_position} is not {self.color}'s stone"
 
         if self.board[to_position] is not None:
-            #print (f"Invalid move. Target position {to_position} is not empty or in hand. Please try again.")
-            return f"Invalid move. Target position {to_position} is not empty or in hand. Please try again."
+            return f"Invalid: Target position {to_position} is not empty"
+            
         if self.is_mill(to_position, self.color):
             valid_removals = self._get_valid_remove_positions(self.color)
             if removal == "r0" and valid_removals:
-                #print(f"Invalid move. A mill was formed but no removal was made. Please try again.")
-                return f"Invalid move. A mill was formed but no removal was made. Please try again."
+                return "Invalid: A mill was formed but no removal was made"
             if removal not in valid_removals and removal != "r0":
-                #print(f"Invalid move. Attempt to remove an invalid stone {removal}. Please try again.")
-                return f"Invalid move. Attempt to remove an invalid stone {removal}. Please try again."
-        return "Invalid move. Please try again."
+                return f"Invalid: Attempt to remove an invalid stone {removal}"
+                
+        return "Invalid: Move does not follow game rules"
 
     def get_valid_llm_move(self)->str:
-        """Get a valid move from Gemini with retries and fallback."""
-        move = self.get_llm_move("")
-        move = self.is_valid_llm_move(move)
-        if not move.startswith("Invalid"):
-            return move
-        else:
-            move = self.get_llm_move(move)
-            move = self.is_valid_llm_move(move)
-            if not move.startswith("Invalid"):
-                return move
+        """
+        Get a valid move from Gemini with retries and fallback.
+        
+        Returns:
+            str: A valid move in the format 'from_pos to_pos remove_pos'
+        """
+        retries = 0
+        while retries < MAX_RETRIES:
+            try:
+                move = self.get_llm_move("" if retries == 0 else f"Previous move was invalid. Attempt {retries + 1}")
+                move = self.is_valid_llm_move(move)
+                if not move.startswith("Invalid"):
+                    return move
+                retries += 1
+            except Exception as e:
+                print(f"Error getting LLM move: {str(e)}", file=sys.stderr)
+                retries += 1
+
+        # Fallback to random move if LLM fails
+        print("LLM failed to provide valid move, falling back to random move", file=sys.stderr)
         return self.get_random_move()
 
     def get_random_move(self)-> str:
-        """Return a random valid move from the list of valid moves."""
+        """
+        Return a random valid move from the list of valid moves.
+        
+        Returns:
+            str: A valid move in the format 'from_pos to_pos remove_pos'
+        """
         valid_moves = self.get_valid_moves(self.color)
 
         if valid_moves:
@@ -335,12 +369,17 @@ class LLM:
         else:
             return "Invalid. No valid moves available. The game is over."
 
-
     def get_llm_move(self,hints: str) -> str:
-        """Initialize Gemini client and send game rules.
-        Get the next move from Gemini given the board state and player color"""
-
-        client = genai.Client(api_key="AIzaSyB59sCEon9MxTlYeJImh9lTSIADNFdY5jU")
+        """
+        Get the next move from Gemini given the board state and player color.
+        
+        Args:
+            hints: Additional hints or error messages from previous attempts
+            
+        Returns:
+            str: The move in the format 'from_pos to_pos remove_pos'
+        """
+        client = genai.Client(api_key=API_KEY)
         valid_positions = [
             'a1', 'a4', 'a7',
             'b2', 'b4', 'b6',
@@ -430,7 +469,7 @@ class LLM:
             "     - **C** = opponent stone to remove ('r0' if no removal).\n"
             "4. **Examples**:\n"
             "   - 'Move from h1 to d1. This will not form a mill, so no removal is necessary, so (h1 d1 r0).'\n"
-            "   - 'Move from e3 to e4, forming a mill. Removing opponent’s stone at f4. (e3 e4 f4).'\n"
+            "   - 'Move from e3 to e4, forming a mill. Removing opponent's stone at f4. (e3 e4 f4).'\n"
             "   - 'Move from a4 to b4. No mill is formed. (a4 b4 r0).'\n\n"
             "Return **only the formatted response** without extra explanations.\n"
             
@@ -451,12 +490,17 @@ class LLM:
 
 
 def main():
-    """Main function to handle game communication."""
+    """
+    Main function to handle game communication.
+    Manages the game loop, player initialization, and move processing.
+    """
     ai = None
+    last_api_call_time = 0  # Track last API call time
+    
     try:
         while True:
             try:
-                # Read input from referee
+                # Read input from referee with timeout
                 input_line = input().strip()
 
                 # Check for game end
@@ -467,35 +511,72 @@ def main():
                 if input_line in ['blue', 'orange']:
                     ai = LLM(input_line)
                     if input_line == 'blue':
-                        #Blue moves first
+                        # Blue moves first
+                        start_time = time.time()
+                        
+                        # Ensure we respect API rate limits but with minimal delay
+                        time_since_last_call = time.time() - last_api_call_time
+                        if time_since_last_call < API_RATE_LIMIT:
+                            time.sleep(max(0.1, API_RATE_LIMIT - time_since_last_call))
+                        
                         move = ai.get_valid_llm_move()
+                        last_api_call_time = time.time()
+                        
+                        # Calculate remaining time and add minimal delay
+                        elapsed_time = time.time() - start_time
+                        remaining_time = TIME_LIMIT - elapsed_time - API_CALL_BUFFER
+                        
+                        if remaining_time > MIN_MOVE_TIME:
+                            # Add minimal delay for game flow
+                            delay = min(MAX_MOVE_TIME, remaining_time * 0.1)  # Use 10% of remaining time
+                            time.sleep(delay)
+                            
                         ai.update_board(move)
-                        time.sleep(4)
-                        #print(ai.board)
                         print(move, flush=True)
                 else:
                     # Process opponent's move and respond
                     if ai:
-                        # Validate opponent's move
                         try:
+                            # Update board with opponent's move
                             ai.update_board(input_line)
+                            
+                            start_time = time.time()
+                            
+                            # Ensure we respect API rate limits but with minimal delay
+                            time_since_last_call = time.time() - last_api_call_time
+                            if time_since_last_call < API_RATE_LIMIT:
+                                time.sleep(max(0.1, API_RATE_LIMIT - time_since_last_call))
+                            
+                            # Generate and make our move
+                            move = ai.get_valid_llm_move()
+                            last_api_call_time = time.time()
+                            
+                            # Calculate remaining time and add minimal delay
+                            elapsed_time = time.time() - start_time
+                            remaining_time = TIME_LIMIT - elapsed_time - API_CALL_BUFFER
+                            
+                            if remaining_time > MIN_MOVE_TIME:
+                                # Add minimal delay for game flow
+                                delay = min(MAX_MOVE_TIME, remaining_time * 0.1)  # Use 10% of remaining time
+                                time.sleep(delay)
+                                
+                            ai.update_board(move)
+                            print(move, flush=True)
+                            
                         except Exception as e:
-                            print(f"Invalid opponent move: {str(e)}", file=sys.stderr)
-                            continue
-
-                        # Generate and make our move
-                        move = ai.get_valid_llm_move()
-                        ai.update_board(move)
-                        time.sleep(4)
-                        #print(ai.board)
-                        print(move, flush=True)
+                            print(f"Error processing move: {str(e)}", file=sys.stderr)
+                            # Try to make a random move as fallback without delay
+                            move = ai.get_random_move()
+                            ai.update_board(move)
+                            print(move, flush=True)
 
             except EOFError:
                 break
             except Exception as e:
-                print(f"Error in main loop: {str(e)}", file=sys.stderr)
+                print(f"Critical error in main loop: {str(e)}", file=sys.stderr)
                 sys.exit(1)
     except KeyboardInterrupt:
+        print("Game interrupted by user", file=sys.stderr)
         sys.exit(0)
 
 
