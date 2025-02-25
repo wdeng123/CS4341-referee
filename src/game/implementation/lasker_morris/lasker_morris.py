@@ -303,6 +303,12 @@ class LaskerMorris(AbstractGame):
                 )
                 return False
 
+            if self._is_mill("r0", remove) and self._count_player_pieces(self._current_player.get_color()) > self._mill_count():
+                click.echo(
+                    f"\n{Fore.RED}Invalid move: Cannot remove opponent's stone - stone in a mill{Style.RESET_ALL}"
+                )
+                return False
+
             if not self._is_mill(source, target):
                 click.echo(
                     f"\n{Fore.RED}Invalid move: Cannot remove opponent's stone - move does not form a mill{Style.RESET_ALL}"
@@ -318,6 +324,42 @@ class LaskerMorris(AbstractGame):
             self.moves_without_taking += 1
 
         return True
+
+    def _mill_count(self) -> int:
+        """Count the number of mills on the board.
+
+        Returns:
+            int: Total number of mills on the board
+        """
+        color = self._current_player.get_color()
+
+        mills = [
+            # Horizontal mills
+            ["a1", "a4", "a7"],
+            ["b2", "b4", "b6"],
+            ["c3", "c4", "c5"],
+            ["d1", "d2", "d3"],
+            ["d5", "d6", "d7"],
+            ["e3", "e4", "e5"],
+            ["f2", "f4", "f6"],
+            ["g1", "g4", "g7"],
+            # Vertical mills
+            ["a1", "d1", "g1"],
+            ["b2", "d2", "f2"],
+            ["c3", "d3", "e3"],
+            ["a4", "b4", "c4"],
+            ["e4", "f4", "g4"],
+            ["c5", "d5", "e5"],
+            ["b6", "d6", "f6"],
+            ["a7", "d7", "g7"],
+        ]
+
+        mill_count = 0
+        for mill in mills:
+            if all(self.board[pos] == color for pos in mill):
+                mill_count += 1
+
+        return mill_count
 
     def _is_mill(self, source: str, target: str) -> bool:
         """Check if placing a stone at target position forms a mill.
