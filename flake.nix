@@ -16,6 +16,7 @@
           pkgs.python3
           pkgs.uv
           pkgs.maven
+          pkgs.cargo
         ];
 
       };

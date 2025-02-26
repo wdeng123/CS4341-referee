@@ -303,9 +303,13 @@ class LaskerMorris(AbstractGame):
                 )
                 return False
 
-            if self._is_mill("r0", remove) and self._count_player_pieces(self._current_player.get_color()) > self._mill_count():
+            # Get opponent's color
+            opponent_color = "orange" if self._current_player.get_color() == "blue" else "blue"
+
+            # Check if stone is in a mill, and if all opponent stones are in mills
+            if self._position_is_in_mill(remove, opponent_color) and self._count_stones_outside_mills(opponent_color) > 0:
                 click.echo(
-                    f"\n{Fore.RED}Invalid move: Cannot remove opponent's stone - stone in a mill{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid move: Can't remove opponent's stone - stone is in a mill and opponent has stones outside{Style.RESET_ALL}"
                 )
                 return False
 
@@ -324,6 +328,63 @@ class LaskerMorris(AbstractGame):
             self.moves_without_taking += 1
 
         return True
+
+    def _position_is_in_mill(self, position: str, color: str) -> bool:
+        """Check if a position is part of a mill for a specific color.
+
+        Args:
+            position: Board position to check
+            color: Color to check mill for ('blue' or 'orange')
+
+        Returns:
+            bool: True if position is part of a mill
+        """
+        mills = [
+            # Horizontal mills
+            ["a1", "a4", "a7"],
+            ["b2", "b4", "b6"],
+            ["c3", "c4", "c5"],
+            ["d1", "d2", "d3"],
+            ["d5", "d6", "d7"],
+            ["e3", "e4", "e5"],
+            ["f2", "f4", "f6"],
+            ["g1", "g4", "g7"],
+            # Vertical mills
+            ["a1", "d1", "g1"],
+            ["b2", "d2", "f2"],
+            ["c3", "d3", "e3"],
+            ["a4", "b4", "c4"],
+            ["e4", "f4", "g4"],
+            ["c5", "d5", "e5"],
+            ["b6", "d6", "f6"],
+            ["a7", "d7", "g7"],
+        ]
+
+        for mill in mills:
+            if position in mill and all(self.board.get(pos) == color for pos in mill):
+                return True
+
+        return False
+
+    def _count_stones_outside_mills(self, color: str) -> int:
+        """Count stones of a specific color that are not part of any mill.
+
+        Args:
+            color: Color to check ('blue' or 'orange')
+
+        Returns:
+            int: Number of stones not in mills
+        """
+        # Get positions of all stones of the given color
+        positions = [pos for pos, stone_color in self.board.items() if stone_color == color]
+
+        # Count stones not in mills
+        count = 0
+        for pos in positions:
+            if not self._position_is_in_mill(pos, color):
+                count += 1
+
+        return count
 
     def _mill_count(self) -> int:
         """Count the number of mills on the board.
